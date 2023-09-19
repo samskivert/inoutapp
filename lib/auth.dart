@@ -16,31 +16,6 @@ class AuthFormState extends State<AuthForm> {
   String _status = "";
   bool _authing = false;
 
-  void login () async {
-    setState(() {
-      _authing = true;
-    });
-    try {
-      await FirebaseAuth.instance.signInWithEmailAndPassword(
-        email: _email,
-        password: _password
-      );
-    } on FirebaseAuthException catch (e) {
-      if (e.code == 'user-not-found') {
-        setState(() {
-          _status = 'No user found for that email.';
-        });
-      } else if (e.code == 'wrong-password') {
-        setState(() {
-          _status = 'That password is not correct.';
-        });
-      }
-    }
-    setState(() {
-      _authing = false;
-    });
-  }
-
   @override Widget build(BuildContext context) {
     return Form(
       key: _formKey,
@@ -69,6 +44,7 @@ class AuthFormState extends State<AuthForm> {
               return value == null || value.isEmpty ? 'Please enter your password.' : null;
             },
           ),
+          Text(_status),
           ElevatedButton(
             onPressed: _authing ? null : () {
               if (_formKey.currentState!.validate()) login();
@@ -78,5 +54,27 @@ class AuthFormState extends State<AuthForm> {
         ],
       ),
     );
+  }
+
+  void login () async {
+    setState(() {
+      _authing = true;
+      _status = "Logging in...";
+    });
+    var status = "";
+    try {
+      await FirebaseAuth.instance.signInWithEmailAndPassword(
+        email: _email,
+        password: _password
+      );
+    } on FirebaseAuthException catch (e) {
+      status = (e.code == 'user-not-found' ? 'No user found for that email.' :
+                e.code == 'wrong-password' ? 'That password is not correct.' :
+                'Error: ${e.code}');
+    }
+    setState(() {
+      _authing = false;
+      _status = status;
+    });
   }
 }
