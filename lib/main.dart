@@ -1,20 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:google_sign_in/google_sign_in.dart';
 import 'firebase_options.dart';
 import 'auth.dart';
 
-Future<UserCredential> signInWithGoogle() async {
-  var googleUser = await GoogleSignIn().signIn();
-  var googleAuth = await googleUser?.authentication;
-  return await FirebaseAuth.instance.signInWithCredential(GoogleAuthProvider.credential(
-    accessToken: googleAuth?.accessToken,
-    idToken: googleAuth?.idToken,
-  ));
-}
-
-void main() async {
+void main () async {
   WidgetsFlutterBinding.ensureInitialized();
   // TODO: is there a better time to do this?
   var task = Firebase.initializeApp(
@@ -28,7 +18,7 @@ class InOutApp extends StatefulWidget {
   const InOutApp({super.key});
 
   @override
-  State<InOutApp> createState() => InOutAppState();
+  State<InOutApp> createState () => InOutAppState();
 }
 
 class InOutAppState extends State<InOutApp> {
@@ -45,42 +35,89 @@ class InOutAppState extends State<InOutApp> {
   }
 
   @override
-  Widget build(BuildContext context) {
-    var title = 'Input/Output - ${(_user?.displayName ?? '<not logged in>')}';
+  Widget build (BuildContext context) {
+    var title = 'Input/Output';
     return MaterialApp(
       title: title,
       theme: ThemeData(
         primarySwatch: Colors.green,
       ),
-      home: MyHomePage(title: title),
+      home: _user == null ? AuthPage(title: title) : ListsPage(title: title),
     );
   }
 }
 
-class MyHomePage extends StatefulWidget {
-  const MyHomePage({super.key, required this.title});
+class AuthPage extends StatelessWidget {
+  const AuthPage ({super.key, required this.title});
 
   final String title;
 
   @override
-  State<MyHomePage> createState() => _MyHomePageState();
+  Widget build (BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: Text(title),
+      ),
+      body: const Center(
+        child: Padding(
+          padding: EdgeInsets.symmetric(horizontal: 8, vertical: 16),
+          child: AuthForm(),
+        ),
+      ),
+    );
+  }
 }
 
-class _MyHomePageState extends State<MyHomePage> {
+class ListsPage extends StatefulWidget {
+  const ListsPage ({super.key, required this.title});
+
+  final String title;
+
+  @override
+  State<ListsPage> createState () => _ListsPageState();
+}
+
+class _ListsPageState extends State<ListsPage> {
   int _counter = 0;
 
-  void _incrementCounter() async {
-    // setState(() {
-    //   _counter++;
-    // });
-    await signInWithGoogle();
+  void _incrementCounter () async {
+    setState(() {
+      _counter++;
+    });
+  }
+
+  IconButton listIcon (IconData icon, String tooltip) {
+    return IconButton(
+      icon: Icon(icon),
+      tooltip: tooltip,
+      onPressed: () {
+        // TODO: set the selected tab state
+      }
+    );
   }
 
   @override
-  Widget build(BuildContext context) {
+  Widget build (BuildContext context) {
     return Scaffold(
       appBar: AppBar(
         title: Text(widget.title),
+        actions: <Widget>[
+          listIcon(Icons.calendar_month, "Journal"),
+          listIcon(Icons.menu_book, "To Read"),
+          listIcon(Icons.local_movies, "To See"),
+          listIcon(Icons.music_video, "To Hear"),
+          listIcon(Icons.videogame_asset, "To Play"),
+          listIcon(Icons.local_dining, "To Dine"),
+          listIcon(Icons.build, "To Build"),
+          IconButton(
+            icon: const Icon(Icons.logout),
+            tooltip: 'Logout',
+            onPressed: () async {
+              // TODO: could this throw an exception?
+              await FirebaseAuth.instance.signOut();
+            },
+          ),
+        ],
       ),
       body: Center(
         child: Padding(
@@ -88,7 +125,6 @@ class _MyHomePageState extends State<MyHomePage> {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: <Widget>[
-              const AuthForm(),
               const Text(
                 'You have pressed the button this many times:',
               ),
