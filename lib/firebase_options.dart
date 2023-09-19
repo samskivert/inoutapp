@@ -57,7 +57,7 @@ class DefaultFirebaseOptions {
     databaseURL: 'https://input-output-26476.firebaseio.com',
     storageBucket: 'input-output-26476.appspot.com',
     iosClientId: '800961532828-mbl2fpui0uk6lauq3hlas0gj6c7o91iu.apps.googleusercontent.com',
-    iosBundleId: 'com.example.inoutapp',
+    iosBundleId: 'com.samskivert.inoutapp',
   );
 
   static const FirebaseOptions macos = FirebaseOptions(
@@ -68,6 +68,6 @@ class DefaultFirebaseOptions {
     databaseURL: 'https://input-output-26476.firebaseio.com',
     storageBucket: 'input-output-26476.appspot.com',
     iosClientId: '800961532828-mbl2fpui0uk6lauq3hlas0gj6c7o91iu.apps.googleusercontent.com',
-    iosBundleId: 'com.example.inoutapp',
+    iosBundleId: 'com.samskivert.inoutapp',
   );
 }

@@ -1,7 +1,18 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:google_sign_in/google_sign_in.dart';
 import 'firebase_options.dart';
-// import 'package:firebase_auth/firebase_auth.dart';
+import 'auth.dart';
+
+Future<UserCredential> signInWithGoogle() async {
+  var googleUser = await GoogleSignIn().signIn();
+  var googleAuth = await googleUser?.authentication;
+  return await FirebaseAuth.instance.signInWithCredential(GoogleAuthProvider.credential(
+    accessToken: googleAuth?.accessToken,
+    idToken: googleAuth?.idToken,
+  ));
+}
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -9,21 +20,39 @@ void main() async {
   var task = Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,
   );
-  runApp(const MyApp());
   await task;
+  runApp(const InOutApp());
 }
 
-class MyApp extends StatelessWidget {
-  const MyApp({super.key});
+class InOutApp extends StatefulWidget {
+  const InOutApp({super.key});
+
+  @override
+  State<InOutApp> createState() => InOutAppState();
+}
+
+class InOutAppState extends State<InOutApp> {
+  User? _user;
+
+  @override
+  void initState () {
+    super.initState();
+    FirebaseAuth.instance.authStateChanges().listen((User? user) {
+      setState(() {
+        _user = user;
+      });
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
+    var title = 'Input/Output - ${(_user?.displayName ?? '<not logged in>')}';
     return MaterialApp(
-      title: 'Flutter Demo',
+      title: title,
       theme: ThemeData(
         primarySwatch: Colors.green,
       ),
-      home: const MyHomePage(title: 'Flutter Demo Home Page'),
+      home: MyHomePage(title: title),
     );
   }
 }
@@ -40,10 +69,11 @@ class MyHomePage extends StatefulWidget {
 class _MyHomePageState extends State<MyHomePage> {
   int _counter = 0;
 
-  void _incrementCounter() {
-    setState(() {
-      _counter++;
-    });
+  void _incrementCounter() async {
+    // setState(() {
+    //   _counter++;
+    // });
+    await signInWithGoogle();
   }
 
   @override
@@ -53,17 +83,21 @@ class _MyHomePageState extends State<MyHomePage> {
         title: Text(widget.title),
       ),
       body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: <Widget>[
-            const Text(
-              'You have pressed the button this many times:',
-            ),
-            Text(
-              '$_counter',
-              style: Theme.of(context).textTheme.headlineMedium,
-            ),
-          ],
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 16),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: <Widget>[
+              const AuthForm(),
+              const Text(
+                'You have pressed the button this many times:',
+              ),
+              Text(
+                '$_counter',
+                style: Theme.of(context).textTheme.headlineMedium,
+              ),
+            ],
+          ),
         ),
       ),
       floatingActionButton: FloatingActionButton(
