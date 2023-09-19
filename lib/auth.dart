@@ -2,9 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
 class AuthForm extends StatefulWidget {
-  const AuthForm({super.key});
+  const AuthForm ({super.key});
 
-  @override AuthFormState createState() {
+  @override AuthFormState createState () {
     return AuthFormState();
   }
 }
@@ -16,33 +16,21 @@ class AuthFormState extends State<AuthForm> {
   String _status = "";
   bool _authing = false;
 
-  @override Widget build(BuildContext context) {
+  @override Widget build (BuildContext context) {
     return Form(
       key: _formKey,
       child: Column(
         children: <Widget>[
           TextFormField(
-            decoration: const InputDecoration(
-              hintText: 'Email address',
-            ),
-            onChanged: (text) {
-              _email = text;
-            },
-            validator: (value) {
-              return value == null || value.isEmpty ? 'Please enter your email address.' : null;
-            },
+            decoration: const InputDecoration(hintText: 'Email address'),
+            onChanged: (text) { _email = text; },
+            validator: (value) { return nonNull(value, 'Please enter your email address.'); },
           ),
           TextFormField(
-            decoration: const InputDecoration(
-              hintText: 'Password',
-            ),
+            decoration: const InputDecoration(hintText: 'Password'),
             obscureText: true,
-            onChanged: (text) {
-              _password = text;
-            },
-            validator: (value) {
-              return value == null || value.isEmpty ? 'Please enter your password.' : null;
-            },
+            onChanged: (text) { _password = text; },
+            validator: (value) { return nonNull(value, 'Please enter your password.'); },
           ),
           Text(_status),
           ElevatedButton(
@@ -55,6 +43,8 @@ class AuthFormState extends State<AuthForm> {
       ),
     );
   }
+
+  String? nonNull (String? txt, String msg) { return txt == null || txt.isEmpty ? msg : null; }
 
   void login () async {
     setState(() {
