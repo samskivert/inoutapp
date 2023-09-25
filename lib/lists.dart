@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:url_launcher/url_launcher.dart';
 import 'model.dart';
 import 'store.dart';
 
@@ -82,7 +83,10 @@ class ReadItem extends StatelessWidget {
       items.add(IconButton(
         icon: const Icon(Icons.link),
         tooltip: item.link,
-        onPressed: () {
+        onPressed: () async {
+          if (!await launchUrl(Uri.parse(item.link!))) {
+            print('Failed to launch: ${item.link}');
+          }
         }
       ));
     }
