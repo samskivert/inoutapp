@@ -3,6 +3,9 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'firebase_options.dart';
 import 'auth.dart';
+import 'model.dart';
+import 'store.dart';
+import 'lists.dart';
 
 void main () async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -22,27 +25,30 @@ class InOutApp extends StatefulWidget {
 }
 
 class InOutAppState extends State<InOutApp> {
-  User? _user;
+  // User? _user;
+  Store? _store;
 
   @override
   void initState () {
     super.initState();
     FirebaseAuth.instance.authStateChanges().listen((User? user) {
       setState(() {
-        _user = user;
+        // _user = user;
+        _store = user == null ? null : Store(user);
       });
     });
   }
 
   @override
   Widget build (BuildContext context) {
-    var title = 'Input/Output';
+    const title = 'Input/Output';
+    final store = _store;
+    final home = store != null ? ListsPage(title: title, store: store) :
+      const AuthPage(title: title);
     return MaterialApp(
       title: title,
-      theme: ThemeData(
-        primarySwatch: Colors.green,
-      ),
-      home: _user == null ? AuthPage(title: title) : ListsPage(title: title),
+      theme: ThemeData(primarySwatch: Colors.green),
+      home: home,
     );
   }
 }
@@ -52,8 +58,7 @@ class AuthPage extends StatelessWidget {
 
   final String title;
 
-  @override
-  Widget build (BuildContext context) {
+  @override Widget build (BuildContext context) {
     return Scaffold(
       appBar: AppBar(
         title: Text(title),
@@ -69,29 +74,26 @@ class AuthPage extends StatelessWidget {
 }
 
 class ListsPage extends StatefulWidget {
-  const ListsPage ({super.key, required this.title});
+  const ListsPage ({super.key, required this.title, required this.store});
 
   final String title;
+  final Store store;
 
   @override
   State<ListsPage> createState () => _ListsPageState();
 }
 
 class _ListsPageState extends State<ListsPage> {
-  int _counter = 0;
+  ItemType _page = ItemType.read;
 
-  void _incrementCounter () async {
-    setState(() {
-      _counter++;
-    });
-  }
-
-  IconButton listIcon (IconData icon, String tooltip) {
+  IconButton listIcon (ItemType page, IconData icon, String tooltip) {
     return IconButton(
       icon: Icon(icon),
       tooltip: tooltip,
       onPressed: () {
-        // TODO: set the selected tab state
+        setState(() {
+          _page = page;
+        });
       }
     );
   }
@@ -102,13 +104,13 @@ class _ListsPageState extends State<ListsPage> {
       appBar: AppBar(
         title: Text(widget.title),
         actions: <Widget>[
-          listIcon(Icons.calendar_month, "Journal"),
-          listIcon(Icons.menu_book, "To Read"),
-          listIcon(Icons.local_movies, "To See"),
-          listIcon(Icons.music_video, "To Hear"),
-          listIcon(Icons.videogame_asset, "To Play"),
-          listIcon(Icons.local_dining, "To Dine"),
-          listIcon(Icons.build, "To Build"),
+          listIcon(ItemType.journal, Icons.calendar_month, "Journal"),
+          listIcon(ItemType.read, Icons.menu_book, "To Read"),
+          listIcon(ItemType.watch, Icons.local_movies, "To See"),
+          listIcon(ItemType.hear, Icons.music_video, "To Hear"),
+          listIcon(ItemType.play, Icons.videogame_asset, "To Play"),
+          listIcon(ItemType.dine, Icons.local_dining, "To Dine"),
+          listIcon(ItemType.build, Icons.build, "To Build"),
           IconButton(
             icon: const Icon(Icons.logout),
             tooltip: 'Logout',
@@ -122,24 +124,9 @@ class _ListsPageState extends State<ListsPage> {
       body: Center(
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 16),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: <Widget>[
-              const Text(
-                'You have pressed the button this many times:',
-              ),
-              Text(
-                '$_counter',
-                style: Theme.of(context).textTheme.headlineMedium,
-              ),
-            ],
-          ),
+          // TODO: pick list based on _page
+          child: ReadList(store: widget.store),
         ),
-      ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: _incrementCounter,
-        tooltip: 'Increment',
-        child: const Icon(Icons.add),
       ),
     );
   }
