@@ -28,6 +28,7 @@ dependencies:
   provider: ^6.0.5
   intl: ^0.18.1
   rxdart: ^0.27.7
+  collection: ^1.17.2
 
 dev_dependencies:
   flutter_test:
