@@ -15,18 +15,38 @@ abstract class Item {
   String? get completed;
 }
 
-enum Rating { none, bad, meh, ok, good, great }
+enum Rating {
+  none('', 'None'),
+  bad('🤮', 'Bad'),
+  meh('😒', 'Meh'),
+  ok('😐', 'OK'),
+  good('🙂', 'Good'),
+  great('😍', 'Great!');
+
+  const Rating (this.emoji, this.label);
+  final String label;
+  final String emoji;
+}
 
 abstract class Consume extends Item {
   Rating get rating;
   String? get recommender;
 }
 
-enum ReadType { article, book, paper }
+// we can't include the material icon in here because importing material breaks dart_value, yay
+enum ReadType {
+  article('Article'),
+  book('Book'),
+  paper('Paper');
+
+  const ReadType (this.label);
+  final String label;
+}
 
 abstract class Read implements Item, Consume, Built<Read, ReadBuilder> {
   static Serializer<Read> get serializer => _$readSerializer;
 
+  String id = '';
   String get title;
   String? get author;
   ReadType get type;

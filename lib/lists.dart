@@ -1,112 +1,59 @@
 import 'package:flutter/material.dart';
-import 'package:url_launcher/url_launcher.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'model.dart';
-import 'store.dart';
+import 'toread.dart';
 
-class ReadList extends StatefulWidget {
-  const ReadList ({super.key, required this.store});
-
-  final Store store;
-
-  @override ReadListState createState () {
-    return ReadListState();
-  }
+class ListsPage extends StatefulWidget {
+  const ListsPage ({super.key, required this.title});
+  final String title;
+  @override State<ListsPage> createState () => _ListsPageState();
 }
 
-class ReadListState extends State<ReadList> {
+class _ListsPageState extends State<ListsPage> {
+  ItemType _page = ItemType.read;
 
-  @override Widget build (BuildContext context) {
-    return FutureBuilder<Iterable<Read>>(
-      future: widget.store.readItems(),
-      builder: (BuildContext context, AsyncSnapshot<Iterable<Read>> snapshot) {
-        if (snapshot.hasError) return const Text("What is this? I can't even.");
-        if (snapshot.connectionState != ConnectionState.done) return const Text("Loading...");
-
-        var reading = snapshot.data!.where((ii) => ii.started != null).toList();
-        reading.sort((a, b) => a.started!.compareTo(b.started!));
-        var toRead = snapshot.data!.where((ii) => ii.started == null).toList();
-        toRead.sort((a, b) => b.created.compareTo(a.created));
-
-        return ListView.separated(
-          separatorBuilder: (BuildContext context, int index) => const Divider(),
-          itemCount: (reading.isNotEmpty ? 1 : 0) + reading.length + 1 + toRead.length,
-          itemBuilder: (BuildContext context, int index) {
-            if (reading.isNotEmpty) {
-              if (index == 0) {
-                return header('Reading');
-              } else if (index-1 < reading.length) {
-                return ReadItem(item: reading[index-1]);
-              } else {
-                index -= reading.length+1;
-              }
-            }
-            return index == 0 ? header('To Read') : ReadItem(item: toRead[index-1]);
-          },
-        );
-      },
+  IconButton listIcon (ItemType page, IconData icon, String tooltip) {
+    return IconButton(
+      icon: Icon(icon),
+      tooltip: tooltip,
+      onPressed: () {
+        setState(() {
+          _page = page;
+        });
+      }
     );
   }
 
-  Widget header (String label) {
-    return Row(children: <Widget>[
-      const Icon(Icons.menu_book),
-      const SizedBox(width: 5),
-      Text(label, style: Theme.of(context).textTheme.titleMedium),
-    ]);
-  }
-}
-
-class ReadItem extends StatelessWidget {
-
-  const ReadItem ({super.key, required this.item});
-  final Read item;
-
-  @override Widget build (BuildContext context) {
-    var actionTip = item.started == null ? "Mark as started" : "Mark as completed";
-    var actionIcon = item.started == null ? Icons.play_arrow : Icons.check_box_outline_blank;
-    var items = <Widget>[
-      IconButton(
-        icon: Icon(actionIcon),
-        tooltip: actionTip,
-        onPressed: () {
-        },
+  @override
+  Widget build (BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: Text(widget.title),
+        actions: <Widget>[
+          listIcon(ItemType.journal, Icons.calendar_month, "Journal"),
+          listIcon(ItemType.read, Icons.menu_book, "To Read"),
+          listIcon(ItemType.watch, Icons.local_movies, "To See"),
+          listIcon(ItemType.hear, Icons.music_video, "To Hear"),
+          listIcon(ItemType.play, Icons.videogame_asset, "To Play"),
+          listIcon(ItemType.dine, Icons.local_dining, "To Dine"),
+          listIcon(ItemType.build, Icons.build, "To Build"),
+          IconButton(
+            icon: const Icon(Icons.logout),
+            tooltip: 'Logout',
+            onPressed: () async {
+              // TODO: could this throw an exception?
+              await FirebaseAuth.instance.signOut();
+            },
+          ),
+        ],
       ),
-      Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: <Widget>[
-          Text(item.title),
-          Text(item.author ?? "", style: Theme.of(context).textTheme.bodySmall),
-        ]),
-      const Spacer(),
-    ];
-    if (item.link != null) {
-      items.add(IconButton(
-        icon: const Icon(Icons.link),
-        tooltip: item.link,
-        onPressed: () async {
-          if (!await launchUrl(Uri.parse(item.link!))) {
-            print('Failed to launch: ${item.link}');
-          }
-        }
-      ));
-    }
-    items.addAll([
-      Icon(iconFor(item.type), color: Colors.grey),
-      IconButton(
-        icon: const Icon(Icons.edit),
-        tooltip: "Edit",
-        onPressed: () {
-        },
+      body: const Center(
+        child: Padding(
+          padding: EdgeInsets.symmetric(horizontal: 8, vertical: 16),
+          // TODO: pick list based on _page
+          child: ReadList(),
+        ),
       ),
-    ]);
-    return Row(children: items);
-  }
-
-  IconData iconFor (ReadType type) {
-    switch (type) {
-    case ReadType.article: return Icons.bookmark;
-    case ReadType.book: return Icons.menu_book;
-    case ReadType.paper: return Icons.feed_outlined;
-    }
+    );
   }
 }
