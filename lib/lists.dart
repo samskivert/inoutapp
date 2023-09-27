@@ -26,6 +26,9 @@ class _ListsPageState extends State<ListsPage> {
 
   @override
   Widget build (BuildContext context) {
+    // TODO: pick based on _page
+    const body = ReadList();
+    const footer = BottomAppBar(height: 60, child: ReadFooter());
     return Scaffold(
       appBar: AppBar(
         title: Text(widget.title),
@@ -47,13 +50,11 @@ class _ListsPageState extends State<ListsPage> {
           ),
         ],
       ),
-      body: const Center(
-        child: Padding(
-          padding: EdgeInsets.symmetric(horizontal: 8, vertical: 16),
-          // TODO: pick list based on _page
-          child: ReadList(),
-        ),
-      ),
+      body: const Center(child: Padding(
+        padding: EdgeInsets.symmetric(horizontal: 12),
+        child: body
+      )),
+      bottomNavigationBar: footer,
     );
   }
 }

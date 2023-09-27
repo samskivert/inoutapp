@@ -57,6 +57,42 @@ class ReadListState extends State<ReadList> {
   ]);
 }
 
+class ReadFooter extends StatefulWidget {
+  const ReadFooter ({super.key});
+  @override ReadFooterState createState () => ReadFooterState();
+}
+
+class ReadFooterState extends State<ReadFooter> {
+  final controller = TextEditingController();
+
+  @override Widget build (BuildContext context) {
+    void createItem (String titleAuthor) {
+      if (titleAuthor.isEmpty) return;
+      var didx = titleAuthor.indexOf('-');
+      var (title, author) = didx > 0 ?
+        (titleAuthor.substring(0, didx).trim(), titleAuthor.substring(didx+1).trim()) :
+        (titleAuthor.trim(), null);
+      Provider.of<Store>(context, listen: false).create(title, author);
+      controller.text = '';
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+        content: Text('Created item: $title'),
+      ));
+    }
+    return Row(children: <Widget>[
+      OutlinedButton(child: const Text('Current'), onPressed: () {
+      }),
+      const SizedBox(width: 12),
+      Expanded(child: TextFormField(
+        controller: controller,
+        decoration: const InputDecoration(hintText: 'Title - Author'),
+        onFieldSubmitted: createItem,
+      )),
+      const SizedBox(width: 12),
+      IconButton(icon: const Icon(Icons.add), onPressed: () => createItem(controller.text)),
+    ]);
+  }
+}
+
 void updateRead (BuildContext ctx, Read item, dynamic Function(ReadBuilder) updates) {
   Provider.of<Store>(ctx, listen: false).update(item, item.rebuild(updates));
 }
@@ -233,7 +269,16 @@ class EditReadItemState extends State<EditReadItem> {
                   icon: const Icon(Icons.delete),
                   tooltip: 'Delete item',
                   onPressed: () {
-                    // TODO: delete
+                    final store = Provider.of<Store>(ctx, listen: false);
+                    store.delete(_item);
+                    Navigator.pop(ctx);
+                    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                      content: Text('Deleted item: ${_item.title}'),
+                      action: SnackBarAction(
+                        label: 'Undo',
+                        onPressed: () => store.recreate(_item)
+                      ),
+                    ));
                   },
                 ),
                 const Spacer(),

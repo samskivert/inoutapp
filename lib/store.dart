@@ -38,6 +38,19 @@ class Store {
   Future<void> update (Read orig, Read updated) =>
     _collection('read').doc(orig.id).update(_itemDelta(Read.serializer, orig, updated));
 
+  Future<void> create (String title, String? author) => recreate(Read(
+    (b) => b..title = title
+            ..author = author
+            ..created = Timestamp.now()));
+
+  Future<void> recreate (Read item) {
+    var data = serializers.serializeWith<Read>(Read.serializer, item) as Map<String, dynamic>;
+    if (!data.containsKey('completed')) data['completed'] = null; // needed for index shenanigans
+    return _collection('read').doc().set(data);
+  }
+
+  Future<void> delete (Read item) => _collection('read').doc(item.id).delete();
+
   CollectionReference<Map<String, dynamic>> _collection (String name) {
     return FirebaseFirestore.instance.collection('users').doc(user.uid).collection(name);
   }
