@@ -1,96 +1,89 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:intl/intl.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'model.dart';
 import 'store.dart';
+import 'ui.dart';
 
-class ReadList extends StatefulWidget {
-  const ReadList ({super.key});
-  @override ReadListState createState () => ReadListState();
+enum ReadMode { current, history }
+class ReadModeModel extends ChangeNotifier {
+  ReadMode _mode = ReadMode.current;
+
+  ReadMode get mode => _mode;
+  set mode (ReadMode mode) {
+    _mode = mode;
+    notifyListeners();
+  }
 }
 
-class ReadListState extends State<ReadList> {
+class ToReadPage extends StatefulWidget {
+  const ToReadPage({super.key});
+  @override ToReadPageState createState () => ToReadPageState();
+}
+
+class ToReadPageState extends State<ToReadPage> {
+  bool _historyMode = false;
+  String _filter = '';
+  final _filterCtrl = TextEditingController();
+
+  @override void dispose () {
+    _filterCtrl.dispose();
+    super.dispose();
+  }
 
   @override Widget build (BuildContext context) {
-    return StreamBuilder<(List<Read>, List<Read>, List<Read>)>(
-      stream: Provider.of<Store>(context).readItems(5),
-      builder: (BuildContext ctx, AsyncSnapshot<(List<Read>, List<Read>, List<Read>)> snaps) {
-        if (snaps.hasError) return const Text("What is this? I can't even.");
-        if (snaps.data == null) return const Text('Loading...'); // TODO: spinner
-        var (reading, toRead, recent) = snaps.data!;
-        return ListView.separated(
-          separatorBuilder: (BuildContext ctx, int index) => const Divider(),
-          itemCount: reading.length + (reading.isNotEmpty ? 1 : 0) +
-            toRead.length + (toRead.isNotEmpty ? 1 : 0) +
-            recent.length + (recent.isNotEmpty ? 1 : 0),
-          itemBuilder: (BuildContext ctx, int index) {
-            if (reading.isNotEmpty) {
-              if (index == 0) {
-                return header('Reading');
-              } else if (index-1 < reading.length) {
-                return ReadItem(item: reading[index-1]);
-              } else {
-                index -= reading.length+1;
-              }
-            }
-            if (toRead.isNotEmpty) {
-              if (index == 0) {
-                return header('To Read');
-              } else if (index-1 < toRead.length) {
-                return ReadItem(item: toRead[index-1]);
-              } else {
-                index -= toRead.length+1;
-              }
-            }
-            return index == 0 ? header('Recently Read') : ReadItem(item: recent[index-1]);
-          },
-        );
-      },
+    var store = Provider.of<Store>(context);
+    var items = _historyMode ? store.readHistory().map((iis) => annuate(iis, _filter)) :
+      store.readItems(5).map(
+        (abc) => entries3('Reading', abc.$1, 'To Read', abc.$2, 'Recently Read', abc.$3));
+    _filterCtrl.text = _filter; // this is ridiculous
+    var footer = _historyMode ?
+      Row(children: <Widget>[
+        OutlinedButton(child: const Text('History'), onPressed: () {
+          setState(() {
+            _historyMode = false;
+          });
+        }),
+        const SizedBox(width: 12),
+        Expanded(child: TextFormField(
+          controller: _filterCtrl,
+          decoration: const InputDecoration(hintText: 'Filter'),
+          onFieldSubmitted: (text) => setState(() {
+            _filter = text;
+          }),
+        )),
+      ]) :
+      Row(children: <Widget>[
+        OutlinedButton(child: const Text('Current'), onPressed: () {
+          setState(() {
+            _historyMode = true;
+          });
+        }),
+        const SizedBox(width: 12),
+        ...itemFooter(context, 'Title - Author', createItem),
+      ]);
+    return ChangeNotifierProvider(
+      create: (ctx) => ReadModeModel(),
+      child: Scaffold(
+        appBar: appBar(context),
+        body: Center(child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 12),
+          child: itemList<Read>(items, (ii) => ReadItem(item: ii))
+        )),
+        bottomNavigationBar: BottomAppBar(
+          height: 60, child: footer),
+      )
     );
   }
-
-  Widget header (String label) => Row(children: <Widget>[
-    const Icon(Icons.menu_book),
-    const SizedBox(width: 5),
-    Text(label, style: Theme.of(context).textTheme.titleMedium),
-  ]);
 }
 
-class ReadFooter extends StatefulWidget {
-  const ReadFooter ({super.key});
-  @override ReadFooterState createState () => ReadFooterState();
-}
-
-class ReadFooterState extends State<ReadFooter> {
-  final controller = TextEditingController();
-
-  @override Widget build (BuildContext context) {
-    void createItem (String titleAuthor) {
-      if (titleAuthor.isEmpty) return;
-      var didx = titleAuthor.indexOf('-');
-      var (title, author) = didx > 0 ?
-        (titleAuthor.substring(0, didx).trim(), titleAuthor.substring(didx+1).trim()) :
-        (titleAuthor.trim(), null);
-      Provider.of<Store>(context, listen: false).create(title, author);
-      controller.text = '';
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-        content: Text('Created item: $title'),
-      ));
-    }
-    return Row(children: <Widget>[
-      OutlinedButton(child: const Text('Current'), onPressed: () {
-      }),
-      const SizedBox(width: 12),
-      Expanded(child: TextFormField(
-        controller: controller,
-        decoration: const InputDecoration(hintText: 'Title - Author'),
-        onFieldSubmitted: createItem,
-      )),
-      const SizedBox(width: 12),
-      IconButton(icon: const Icon(Icons.add), onPressed: () => createItem(controller.text)),
-    ]);
-  }
+String createItem (BuildContext ctx, String text) {
+  var didx = text.indexOf('-');
+  var (title, author) = didx > 0 ?
+    (text.substring(0, didx).trim(), text.substring(didx+1).trim()) :
+    (text.trim(), null);
+  Provider.of<Store>(ctx, listen: false).create(title, author);
+  return title;
 }
 
 void updateRead (BuildContext ctx, Read item, dynamic Function(ReadBuilder) updates) {
@@ -98,20 +91,19 @@ void updateRead (BuildContext ctx, Read item, dynamic Function(ReadBuilder) upda
 }
 
 class ReadItem extends StatelessWidget {
-
   ReadItem ({required this.item}) : super(key: Key(item.id));
   final Read item;
 
-  @override Widget build (BuildContext ctx) {
+  @override Widget build (BuildContext context) {
     var (actionTip, actionIcon, action) =
-      item.started == null ? ("Mark as started", Icons.play_arrow, () {
-        updateRead(ctx, item, (b) => b..started = _dateFmt.format(DateTime.now()));
+      item.started == null ? ('Mark as started', Icons.play_arrow, () {
+        updateRead(context, item, (b) => b..started = dateFmt.format(DateTime.now()));
       }) :
-      item.completed == null ? ("Mark as completed", Icons.check_box_outline_blank, () {
-        updateRead(ctx, item, (b) => b..completed = _dateFmt.format(DateTime.now()));
+      item.completed == null ? ('Mark as completed', Icons.check_box_outline_blank, () {
+        updateRead(context, item, (b) => b..completed = dateFmt.format(DateTime.now()));
       }) :
-      ("Revert to uncompleted", Icons.check_box, () {
-        updateRead(ctx, item, (b) => b..completed = null);
+      ('Revert to uncompleted', Icons.check_box, () {
+        updateRead(context, item, (b) => b..completed = null);
       });
     var items = <Widget>[
       IconButton(icon: Icon(actionIcon), tooltip: actionTip, onPressed: action),
@@ -119,12 +111,12 @@ class ReadItem extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: <Widget>[
           Text(item.title),
-          Text(item.author ?? "", style: Theme.of(ctx).textTheme.bodySmall?.merge(
+          Text(item.author ?? '', style: Theme.of(context).textTheme.bodySmall?.merge(
             TextStyle(color: Colors.grey[600]))),
         ]),
       const Spacer(),
       if (item.rating != Rating.none) Text(
-        '${item.rating.emoji} ', style: Theme.of(ctx).textTheme.titleLarge),
+        '${item.rating.emoji} ', style: Theme.of(context).textTheme.titleLarge),
       if (item.link != null) IconButton(
         icon: const Icon(Icons.link),
         tooltip: item.link,
@@ -136,9 +128,9 @@ class ReadItem extends StatelessWidget {
       ),
       IconButton(
         icon: const Icon(Icons.edit),
-        tooltip: "Edit",
+        tooltip: 'Edit',
         onPressed: () => Navigator.push(
-          ctx, MaterialPageRoute(builder: (context) => EditReadItem(item: item))),
+          context, MaterialPageRoute(builder: (context) => EditReadItem(item: item))),
       ),
       Icon(iconFor(item.type), color: Colors.grey[600]),
     ];
@@ -153,12 +145,6 @@ IconData iconFor (ReadType type) {
   case ReadType.paper: return Icons.feed_outlined;
   }
 }
-
-var _dateFmt = DateFormat("yyyy-MM-dd");
-var _createdFmt = DateFormat.yMMMd().add_jm();
-
-String? nonNull (String? txt, String msg) { return txt == null || txt.isEmpty ? msg : null; }
-String? beNull (String txt) => txt.isEmpty ? null : txt;
 
 class EditReadItem extends StatefulWidget {
   const EditReadItem ({super.key, required this.item});
@@ -186,7 +172,7 @@ class EditReadItemState extends State<EditReadItem> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text("Edit"),
+        title: const Text('Edit'),
       ),
       body: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
@@ -194,11 +180,11 @@ class EditReadItemState extends State<EditReadItem> {
           key: _formKey,
           child: Column(
             children: <Widget>[
-              _textField(_item.title, 'Title', (text) {
+              textField(_item.title, 'Title', (text) {
                 _item = _item.rebuild((b) => b..title = text);
               }),
               const SizedBox(height: 12),
-              _textField(_item.author ?? "", 'Author', (text) {
+              textField(_item.author ?? '', 'Author', (text) {
                 _item = _item.rebuild((b) => b..author = beNull(text));
               }),
               const SizedBox(height: 24),
@@ -214,18 +200,18 @@ class EditReadItemState extends State<EditReadItem> {
                   },
                 )),
                 const SizedBox(width: 32),
-                Expanded(child: _textField2(_item.tags.join(' '), 'Tags', (text) {
+                Expanded(child: textField2(_item.tags.join(' '), 'Tags', (text) {
                   _item = _item.rebuild((b) {
                     text.isEmpty ? b.tags.clear() : b.tags.replace(text.split(' '));
                   });
                 })),
               ]),
               Row(children: <Widget>[
-                Expanded(child: _textField2(_item.link ?? "", 'Link', (text) {
+                Expanded(child: textField2(_item.link ?? '', 'Link', (text) {
                   _item = _item.rebuild((b) => b..link = beNull(text));
                 })),
                 const SizedBox(width: 32),
-                Expanded(child: _textField2(_item.recommender ?? "", 'Recommender', (text) {
+                Expanded(child: textField2(_item.recommender ?? '', 'Recommender', (text) {
                   _item = _item.rebuild((b) => b..recommender = beNull(text));
                 })),
               ]),
@@ -253,16 +239,16 @@ class EditReadItemState extends State<EditReadItem> {
               ]),
               const SizedBox(height: 12),
               Row(children: <Widget>[
-                Expanded(child: _textFieldDate(_item.started ?? "", 'Started', (date) {
+                Expanded(child: textFieldDate(ctx, _item.started ?? '', 'Started', (date) {
                   _item = _item.rebuild((b) => b..started = date);
                 })),
                 const SizedBox(width: 32),
-                Expanded(child: _textFieldDate(_item.completed ?? "", 'Completed', (date) {
+                Expanded(child: textFieldDate(ctx, _item.completed ?? '', 'Completed', (date) {
                   _item = _item.rebuild((b) => b..completed = date);
                 })),
               ]),
               const SizedBox(height: 24),
-              Text('Created: ${_createdFmt.format(_item.created.toDate())}'),
+              Text('Created: ${createdFmt.format(_item.created.toDate())}'),
               const SizedBox(height: 24),
               Row(children: <Widget>[
                 IconButton(
@@ -294,63 +280,5 @@ class EditReadItemState extends State<EditReadItem> {
         ),
       ),
     );
-  }
-
-  TextFormField _textField (String value, String label, Function(String) onChanged) {
-    return TextFormField(
-      initialValue: value,
-      decoration: InputDecoration(labelText: label),
-      onChanged: (text) {
-        setState(() {
-          onChanged(text);
-        });
-      },
-    );
-  }
-
-  TextFormField _textField2 (String value, String label, Function(String) onChanged) {
-    return TextFormField(
-      initialValue: value,
-      decoration: InputDecoration(hintText: label),
-      onChanged: (text) {
-        setState(() {
-          onChanged(text);
-        });
-      },
-    );
-  }
-
-  Widget _textFieldDate (String? value, String label, Function(String?) onChanged) {
-    var controller = TextEditingController();
-    controller.text = value ?? '';
-    var date = value is String && value.isNotEmpty ? _dateFmt.parse(value) : DateTime.now();
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.end,
-      children: <Widget>[
-        Expanded(child: TextFormField(
-          controller: controller,
-          decoration: InputDecoration(labelText: label),
-          readOnly: true,
-          onTap: () async {
-            var pickedDate = await showDatePicker(
-              context: context, initialDate: date,
-              firstDate: DateTime(1990),
-              lastDate: DateTime.now().add(const Duration(days: 365)),
-            );
-            if (pickedDate != null) {
-              setState(() {
-                onChanged(_dateFmt.format(pickedDate));
-              });
-            }
-          },
-        )),
-        if (controller.text.isNotEmpty) IconButton(
-          icon: const Icon(Icons.clear),
-          tooltip: 'Clear date',
-          onPressed: () => setState(() {
-            onChanged(null);
-          })
-        )
-      ]);
   }
 }

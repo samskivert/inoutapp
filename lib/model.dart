@@ -6,6 +6,13 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 
 part 'model.g.dart';
 
+typedef Filter = bool Function(String?);
+
+Filter makeFilter (String seek) =>
+  seek.isEmpty ? (text) => true :
+  seek.toLowerCase() != seek ? (text) => text != null && text.contains(seek) :
+  (text) => text != null && text.toLowerCase().contains(seek);
+
 enum ItemType { journal, read, watch, hear, play, dine, build }
 
 abstract class Item {
@@ -13,6 +20,7 @@ abstract class Item {
   BuiltList<String> get tags;
   String? get link;
   String? get completed;
+  bool filter (Filter filter);
 }
 
 enum Rating {
@@ -53,6 +61,9 @@ abstract class Read implements Item, Consume, Built<Read, ReadBuilder> {
   String? get started;
   bool get abandoned;
 
+  @override bool filter (Filter filter) =>
+    filter(title) || filter(author) || filter(recommender) || filter(link) || tags.any(filter);
+
   factory Read([void Function(ReadBuilder) updates]) = _$Read;
   Read._();
 }
@@ -64,6 +75,8 @@ abstract class Build implements Item, Built<Build, BuildBuilder> {
 
   factory Build([void Function(BuildBuilder) updates]) = _$Build;
   Build._();
+
+  @override bool filter (Filter filter) => filter(text);
 }
 
 // in order to provide a defaults value for enums we need this custom builder, yay!

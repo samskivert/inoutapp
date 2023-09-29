@@ -35,6 +35,10 @@ class Store {
     return Rx.combineLatest2(actives, recents, (aa, rr) => (aa.$1, aa.$2, rr));
   }
 
+  Stream<Iterable<Read>> readHistory () {
+    return _collection('read').where('completed', isNull: false).snapshots().map(_decode);
+  }
+
   Future<void> update (Read orig, Read updated) =>
     _collection('read').doc(orig.id).update(_itemDelta(Read.serializer, orig, updated));
 

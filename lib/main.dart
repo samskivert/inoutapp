@@ -4,8 +4,10 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:provider/provider.dart';
 import 'firebase_options.dart';
 import 'auth.dart';
+import 'model.dart';
 import 'store.dart';
-import 'lists.dart';
+import 'ui.dart';
+import 'toread.dart';
 
 void main () async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -14,7 +16,10 @@ void main () async {
     options: DefaultFirebaseOptions.currentPlatform,
   );
   await task;
-  runApp(const InOutApp());
+  runApp(ChangeNotifierProvider(
+    create: (ctx) => InOutModel(),
+    child: const InOutApp()
+  ));
 }
 
 class InOutApp extends StatefulWidget {
@@ -22,6 +27,18 @@ class InOutApp extends StatefulWidget {
 
   @override
   State<InOutApp> createState () => InOutAppState();
+}
+
+class TempPage extends StatelessWidget {
+  final String what;
+  const TempPage({super.key, required this.what});
+  @override Widget build (BuildContext context) => Scaffold(
+    appBar: appBar(context),
+    body: Center(child: Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 12),
+      child: Text(what)
+    )),
+  );
 }
 
 class InOutAppState extends State<InOutApp> {
@@ -37,9 +54,17 @@ class InOutAppState extends State<InOutApp> {
   }
 
   @override Widget build (BuildContext context) {
-    const title = 'Input/Output';
     final user = _user;
-    final home = user == null ? const AuthPage(title: title) : const ListsPage(title: title);
+    final page = Provider.of<InOutModel>(context);
+    final home = user == null ? const AuthPage() : switch (page.page) {
+      ItemType.journal => const TempPage(what: "Journal"),
+      ItemType.read  => const ToReadPage(),
+      ItemType.watch => const TempPage(what: "Watch"),
+      ItemType.hear  => const TempPage(what: "Hear"),
+      ItemType.play  => const TempPage(what: "Play"),
+      ItemType.dine  => const TempPage(what: "Dine"),
+      ItemType.build => const TempPage(what: "Build"),
+    };
     final theme = ThemeData(
         useMaterial3: true,
         colorSchemeSeed: Colors.blue,
@@ -62,15 +87,11 @@ class InOutAppState extends State<InOutApp> {
 }
 
 class AuthPage extends StatelessWidget {
-  const AuthPage ({super.key, required this.title});
-
-  final String title;
+  const AuthPage ({super.key});
 
   @override Widget build (BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: Text(title),
-      ),
+      appBar: AppBar(title: const Text(title)),
       body: const Center(
         child: Padding(
           padding: EdgeInsets.symmetric(horizontal: 8, vertical: 16),
