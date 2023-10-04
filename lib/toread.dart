@@ -29,7 +29,7 @@ class ReadItem extends StatelessWidget {
   final Read item;
 
   @override Widget build (BuildContext context) => consumeRow(
-    context, item, item.title, item.author, iconFor(item.type), item.abandoned,
+    context, item, item.title, item.author, iconFor(item.type), item.abandoned, false,
     () => updateRead(context, item, (b) => b..started = dateFmt.format(DateTime.now())),
     () => updateRead(context, item, (b) => b..completed = dateFmt.format(DateTime.now())),
     () => updateRead(context, item, (b) => b..completed = null),
@@ -52,6 +52,7 @@ class EditReadItem extends EditConsume<Read> {
 class EditReadItemState extends EditConsumeState<EditReadItem, Read, ReadType> {
   @override String main (Read item) => item.title;
   @override Read setMain (Read item, String main) => item.rebuild((b) => b..title = main);
+  @override bool hasAux () => true;
   @override String? aux (Read item) => item.author;
   @override Read setAux (Read item, String? aux) => item.rebuild((b) => b..title = aux);
   @override List<DropdownMenuEntry<ReadType>> typeEntries () => ReadType.values.map(

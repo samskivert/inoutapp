@@ -10,6 +10,7 @@ import 'ui.dart';
 import 'toread.dart';
 import 'towatch.dart';
 import 'tohear.dart';
+import 'toplay.dart';
 
 void main () async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -63,7 +64,7 @@ class InOutAppState extends State<InOutApp> {
       ItemType.read  => const ToReadPage(),
       ItemType.watch => const ToWatchPage(),
       ItemType.hear  => const ToHearPage(),
-      ItemType.play  => const TempPage(what: "Play"),
+      ItemType.play  => const ToPlayPage(),
       ItemType.dine  => const TempPage(what: "Dine"),
       ItemType.build => const TempPage(what: "Build"),
     };

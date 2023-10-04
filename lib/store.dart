@@ -21,40 +21,16 @@ class Store {
     case ItemType.read: createRead(main, aux);
     case ItemType.watch: createWatch(main, aux);
     default: break; // TODO
-    };
+    }
     return main;
   }
 
   // Read
 
-  Stream<Iterable<Read>> readActive () {
-    return _collection('read').where('completed', isNull: true).snapshots().map(_decodeRead);
-  }
-
-  Stream<Iterable<Read>> readRecent (int count) {
-    return _collection('read').where('completed', isGreaterThan: '1900-01-01').
-      orderBy('completed', descending: true).limit(count).snapshots().map(_decodeRead);
-  }
-
-  Stream<(List<Read> active, List<Read> unread, List<Read> recent)> readItems (int recentCount) {
-    var actives = readActive().map((aa) {
-      var reading = aa.where((ii) => ii.started != null).toList();
-      reading.sort((a, b) => a.started!.compareTo(b.started!));
-      var toRead = aa.where((ii) => ii.started == null).toList();
-      toRead.sort((a, b) => b.created.compareTo(a.created));
-      return (reading, toRead);
-    });
-    var recents = readRecent(recentCount).map((rr) {
-      var recents = rr.toList();
-      recents.sort((a, b) => b.completed!.compareTo(a.completed!));
-      return recents;
-    });
-    return Rx.combineLatest2(actives, recents, (aa, rr) => (aa.$1, aa.$2, rr));
-  }
-
-  Stream<Iterable<Read>> readHistory () {
-    return _collection('read').where('completed', isNull: false).snapshots().map(_decodeRead);
-  }
+  Stream<(List<Read> active, List<Read> unread, List<Read> recent)> readItems (int recent) =>
+    _items('read', _decodeRead, recent);
+  Stream<Iterable<Read>> readHistory () =>
+    _collection('read').where('completed', isNull: false).snapshots().map(_decodeRead);
 
   Future<void> createRead (String title, String? author) => recreateRead(Read(
     (b) => b..title = title
@@ -74,34 +50,10 @@ class Store {
 
   // Watch
 
-  Stream<Iterable<Watch>> watchActive () {
-    return _collection('watch').where('completed', isNull: true).snapshots().map(_decodeWatch);
-  }
-
-  Stream<Iterable<Watch>> watchRecent (int count) {
-    return _collection('watch').where('completed', isGreaterThan: '1900-01-01').
-      orderBy('completed', descending: true).limit(count).snapshots().map(_decodeWatch);
-  }
-
-  Stream<(List<Watch> active, List<Watch> unwatch, List<Watch> recent)> watchItems (int recentCount) {
-    var actives = watchActive().map((aa) {
-      var watching = aa.where((ii) => ii.started != null).toList();
-      watching.sort((a, b) => a.started!.compareTo(b.started!));
-      var toWatch = aa.where((ii) => ii.started == null).toList();
-      toWatch.sort((a, b) => b.created.compareTo(a.created));
-      return (watching, toWatch);
-    });
-    var recents = watchRecent(recentCount).map((rr) {
-      var recents = rr.toList();
-      recents.sort((a, b) => b.completed!.compareTo(a.completed!));
-      return recents;
-    });
-    return Rx.combineLatest2(actives, recents, (aa, rr) => (aa.$1, aa.$2, rr));
-  }
-
-  Stream<Iterable<Watch>> watchHistory () {
-    return _collection('watch').where('completed', isNull: false).snapshots().map(_decodeWatch);
-  }
+  Stream<(List<Watch> active, List<Watch> unwatch, List<Watch> recent)> watchItems (int recent) =>
+    _items('watch', _decodeWatch, recent);
+  Stream<Iterable<Watch>> watchHistory () =>
+    _collection('watch').where('completed', isNull: false).snapshots().map(_decodeWatch);
 
   Future<void> createWatch (String title, String? director) => recreateWatch(Watch(
     (b) => b..title = title
@@ -121,34 +73,10 @@ class Store {
 
   // Hear
 
-  Stream<Iterable<Hear>> hearActive () {
-    return _collection('hear').where('completed', isNull: true).snapshots().map(_decodeHear);
-  }
-
-  Stream<Iterable<Hear>> hearRecent (int count) {
-    return _collection('hear').where('completed', isGreaterThan: '1900-01-01').
-      orderBy('completed', descending: true).limit(count).snapshots().map(_decodeHear);
-  }
-
-  Stream<(List<Hear> active, List<Hear> unhear, List<Hear> recent)> hearItems (int recentCount) {
-    var actives = hearActive().map((aa) {
-      var hearing = aa.where((ii) => ii.started != null).toList();
-      hearing.sort((a, b) => a.started!.compareTo(b.started!));
-      var toHear = aa.where((ii) => ii.started == null).toList();
-      toHear.sort((a, b) => b.created.compareTo(a.created));
-      return (hearing, toHear);
-    });
-    var recents = hearRecent(recentCount).map((rr) {
-      var recents = rr.toList();
-      recents.sort((a, b) => b.completed!.compareTo(a.completed!));
-      return recents;
-    });
-    return Rx.combineLatest2(actives, recents, (aa, rr) => (aa.$1, aa.$2, rr));
-  }
-
-  Stream<Iterable<Hear>> hearHistory () {
-    return _collection('hear').where('completed', isNull: false).snapshots().map(_decodeHear);
-  }
+  Stream<(List<Hear> active, List<Hear> unhear, List<Hear> recent)> hearItems (int recent) =>
+    _items('hear', _decodeHear, recent);
+  Stream<Iterable<Hear>> hearHistory () =>
+    _collection('hear').where('completed', isNull: false).snapshots().map(_decodeHear);
 
   Future<void> createHear (String title, String? artist) => recreateHear(Hear(
     (b) => b..title = title
@@ -166,10 +94,55 @@ class Store {
     }).whereType<Hear>();
   }
 
-  // Misc bits
+  // Play
+
+  Stream<(List<Play> active, List<Play> unplay, List<Play> recent)> playItems (int recent) =>
+    _items('play', _decodePlay, recent);
+  Stream<Iterable<Play>> playHistory () =>
+    _collection('play').where('completed', isNull: false).snapshots().map(_decodePlay);
+
+  Future<void> createPlay (String title, String? platform) => recreatePlay(Play(
+    (b) => b..title = title
+            ..platform = platform ?? 'pc'
+            ..created = Timestamp.now()));
+  Future<void> recreatePlay (Play item) => _recreate('play', Play.serializer, item);
+  Future<void> updatePlay (Play orig, Play updated) =>
+    _collection('play').doc(orig.id).update(_itemDelta(Play.serializer, orig, updated));
+  Future<void> deletePlay (Play item) => _collection('play').doc(item.id).delete();
+
+  Iterable<Play> _decodePlay (QuerySnapshot<Map<String, dynamic>> snap) {
+    return snap.docs.map((dd) {
+      var item = serializers.deserializeWith<Play>(Play.serializer, dd.data());
+      return item?.rebuild((bb) => bb..id = dd.id);
+    }).whereType<Play>();
+  }
+
+  // Generic bits
 
   CollectionReference<Map<String, dynamic>> _collection (String name) {
     return FirebaseFirestore.instance.collection('users').doc(user.uid).collection(name);
+  }
+
+  Stream<(List<I> active, List<I> pending, List<I> recent)> _items<I extends Item> (
+    String collection, Iterable<I> Function(QuerySnapshot<Map<String, dynamic>> snap) decode,
+    int recentCount
+  ) {
+    var incomplete = _collection(collection).where('completed', isNull: true).snapshots().map((snap) {
+      var items = decode(snap);
+      var active = items.where((ii) => ii.started != null).toList();
+      active.sort((a, b) => a.started!.compareTo(b.started!));
+      var pending = items.where((ii) => ii.started == null).toList();
+      pending.sort((a, b) => b.created.compareTo(a.created));
+      return (active, pending);
+    });
+    var recents = _collection(collection).where('completed', isGreaterThan: '1900-01-01').
+      orderBy('completed', descending: true).limit(recentCount).snapshots().map((snap) {
+        var rr = decode(snap);
+        var recent = rr.toList();
+        recent.sort((a, b) => b.completed!.compareTo(a.completed!));
+        return recent;
+      });
+    return Rx.combineLatest2(incomplete, recents, (aa, rr) => (aa.$1, aa.$2, rr));
   }
 
   Future<void> _recreate<I extends Item> (String collection, Serializer<I> szer, I item) {

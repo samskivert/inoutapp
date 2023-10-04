@@ -29,7 +29,7 @@ class HearItem extends StatelessWidget {
   final Hear item;
 
   @override Widget build (BuildContext context) => consumeRow(
-    context, item, item.title, item.artist, iconFor(item.type), false,
+    context, item, item.title, item.artist, iconFor(item.type), false, false,
     () => updateHear(context, item, (b) => b..started = dateFmt.format(DateTime.now())),
     () => updateHear(context, item, (b) => b..completed = dateFmt.format(DateTime.now())),
     () => updateHear(context, item, (b) => b..completed = null),
@@ -53,6 +53,7 @@ class EditHearItem extends EditConsume<Hear> {
 class EditHearItemState extends EditConsumeState<EditHearItem, Hear, HearType> {
   @override String main (Hear item) => item.title;
   @override Hear setMain (Hear item, String main) => item.rebuild((b) => b..title = main);
+  @override bool hasAux () => true;
   @override String? aux (Hear item) => item.artist;
   @override Hear setAux (Hear item, String? aux) => item.rebuild((b) => b..title = aux);
   @override List<DropdownMenuEntry<HearType>> typeEntries () => HearType.values.map(

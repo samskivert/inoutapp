@@ -136,6 +136,21 @@ abstract class Hear implements Item, Consume, Built<Hear, HearBuilder> {
   Hear._();
 }
 
+abstract class Play implements Item, Consume, Built<Play, PlayBuilder> {
+  static Serializer<Play> get serializer => _$playSerializer;
+
+  String get title;
+  String get platform;
+  bool get credits;
+
+  @override bool startable () => started == null;
+  @override bool filter (Filter filter) =>
+    filter(title) || filter(platform) || filter(recommender) || filter(link) || tags.any(filter);
+
+  factory Play([void Function(PlayBuilder) updates]) = _$Play;
+  Play._();
+}
+
 abstract class Build implements Item, Built<Build, BuildBuilder> {
   static Serializer<Build> get serializer => _$buildSerializer;
 
@@ -206,6 +221,25 @@ abstract class HearBuilder implements Builder<Hear, HearBuilder> {
 
   factory HearBuilder() = _$HearBuilder;
   HearBuilder._();
+}
+
+abstract class PlayBuilder implements Builder<Play, PlayBuilder> {
+  Timestamp? created;
+  ListBuilder<String> tags = ListBuilder<String>();
+  String? link;
+  String? completed;
+
+  Rating rating = Rating.none;
+  String? recommender;
+
+  String? id;
+  String? title;
+  String platform = "pc";
+  String? started;
+  bool credits = false;
+
+  factory PlayBuilder() = _$PlayBuilder;
+  PlayBuilder._();
 }
 
 // manual serialization plumbing, yay!
@@ -285,6 +319,7 @@ class HearTypeSerializer implements PrimitiveSerializer<HearType> {
   Read,
   Watch,
   Hear,
+  Play,
   Build,
 ])
 final Serializers serializers = (_$serializers.toBuilder()

@@ -214,7 +214,8 @@ List<Widget> itemFooter (
 }
 
 Widget consumeRow (
-  BuildContext ctx, Consume item, String title, String? subtitle, IconData? icon, bool abandoned,
+  BuildContext ctx, Consume item, String title, String? subtitle, IconData? icon,
+  bool abandoned, bool finished,
   void Function() onStart, void Function() onComplete, void Function() onUncomplete,
   Widget Function(BuildContext) onEdit
 ) {
@@ -233,7 +234,6 @@ Widget consumeRow (
           TextStyle(color: Colors.grey[600]))),
       ]),
     const Spacer(),
-    if (emoji != null) Text(emoji, style: Theme.of(ctx).textTheme.titleLarge),
     if (item.link != null) IconButton(
       icon: const Icon(Icons.link),
       tooltip: item.link,
@@ -243,6 +243,8 @@ Widget consumeRow (
         }
       }
     ),
+    if (finished) Text('🏁', style: Theme.of(ctx).textTheme.titleLarge),
+    if (emoji != null) Text(emoji, style: Theme.of(ctx).textTheme.titleLarge),
     IconButton(
       icon: const Icon(Icons.edit),
       tooltip: 'Edit',
@@ -313,9 +315,7 @@ abstract class EditConsume<I extends Consume> extends StatefulWidget {
   final I item;
 }
 
-abstract class EditConsumeState<
-  W extends EditConsume<I>, I extends Consume, T extends Enum
-> extends State<W> {
+abstract class EditConsumeState<W extends EditConsume<I>, I extends Consume, T> extends State<W> {
   final _formKey = GlobalKey<FormState>();
   late I _item;
 
@@ -326,8 +326,6 @@ abstract class EditConsumeState<
 
   String main (I item);
   I setMain (I item, String main);
-  String? aux (I item);
-  I setAux (I item, String? aux);
   List<DropdownMenuEntry<T>> typeEntries ();
   T type (I item);
   I setType (I item, T type);
@@ -341,9 +339,19 @@ abstract class EditConsumeState<
   void delete (Store store, I item);
   void recreate (Store store, I item);
 
+  bool hasAux () => false;
+  String? aux (I item) => null;
+  I setAux (I item, String? aux) => item;
+
+  // for things that we occasionally don't finish
   bool hasAbandoned () => false;
   bool abandoned (I item) => false;
   I setAbandoned (I item, bool abandoned) => item;
+
+  // for things that we only occasionally actually finish
+  bool hasFinished () => false;
+  bool finished (I item) => false;
+  I setFinished (I item, bool finished) => item;
 
   @override Widget build (BuildContext ctx) => Scaffold(
     appBar: AppBar(
@@ -358,8 +366,8 @@ abstract class EditConsumeState<
             textField(main(_item), 'Title', (text) {
               _item = setMain(_item, text);
             }),
-            const SizedBox(height: 12),
-            textField(aux(_item) ?? '', 'Director', (text) {
+            if (hasAux()) const SizedBox(height: 12),
+            if (hasAux()) textField(aux(_item) ?? '', 'Director', (text) {
               _item = setAux(_item, beNull(text));
             }),
             const SizedBox(height: 24),
@@ -406,6 +414,15 @@ abstract class EditConsumeState<
                 onChanged: (selected) {
                   setState(() {
                     if (selected is bool) _item = setAbandoned(_item, selected);
+                  });
+                },
+              )),
+              if (hasFinished()) Expanded(child: CheckboxListTile(
+                title: const Text('Saw Credits?'),
+                value: finished(_item),
+                onChanged: (selected) {
+                  setState(() {
+                    if (selected is bool) _item = setFinished(_item, selected);
                   });
                 },
               )),

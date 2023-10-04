@@ -29,7 +29,7 @@ class WatchItem extends StatelessWidget {
   final Watch item;
 
   @override Widget build (BuildContext context) => consumeRow(
-    context, item, item.title, item.director, iconFor(item.type), item.abandoned,
+    context, item, item.title, item.director, iconFor(item.type), item.abandoned, false,
     () => updateWatch(context, item, (b) => b..started = dateFmt.format(DateTime.now())),
     () => updateWatch(context, item, (b) => b..completed = dateFmt.format(DateTime.now())),
     () => updateWatch(context, item, (b) => b..completed = null),
@@ -53,6 +53,7 @@ class EditWatchItem extends EditConsume<Watch> {
 class EditWatchItemState extends EditConsumeState<EditWatchItem, Watch, WatchType> {
   @override String main (Watch item) => item.title;
   @override Watch setMain (Watch item, String main) => item.rebuild((b) => b..title = main);
+  @override bool hasAux () => true;
   @override String? aux (Watch item) => item.director;
   @override Watch setAux (Watch item, String? aux) => item.rebuild((b) => b..title = aux);
   @override List<DropdownMenuEntry<WatchType>> typeEntries () => WatchType.values.map(
