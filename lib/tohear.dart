@@ -54,10 +54,12 @@ class EditHearItemState extends EditConsumeState<EditHearItem, Hear, HearType> {
   @override String main (Hear item) => item.title;
   @override Hear setMain (Hear item, String main) => item.rebuild((b) => b..title = main);
   @override bool hasAux () => true;
+  @override String auxName () => 'Artist';
   @override String? aux (Hear item) => item.artist;
   @override Hear setAux (Hear item, String? aux) => item.rebuild((b) => b..title = aux);
   @override List<DropdownMenuEntry<HearType>> typeEntries () => HearType.values.map(
     (rr) => DropdownMenuEntry<HearType>(value: rr, label: rr.label)).toList();
+  @override bool hasType () => true;
   @override HearType type (Hear item) => item.type;
   @override Hear setType (Hear item, HearType type) => item.rebuild((b) => b..type = type);
   @override Hear setTags (Hear item, List<String> tags) =>

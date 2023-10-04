@@ -70,6 +70,7 @@ class EditPlayItemState extends EditConsumeState<EditPlayItem, Play, String> {
   @override String main (Play item) => item.title;
   @override Play setMain (Play item, String main) => item.rebuild((b) => b..title = main);
   @override List<DropdownMenuEntry<String>> typeEntries () => playTypeEntries;
+  @override bool hasType () => true;
   @override String type (Play item) => item.platform;
   @override Play setType (Play item, String type) => item.rebuild((b) => b..platform = type);
   @override Play setTags (Play item, List<String> tags) =>

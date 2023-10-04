@@ -326,9 +326,6 @@ abstract class EditConsumeState<W extends EditConsume<I>, I extends Consume, T> 
 
   String main (I item);
   I setMain (I item, String main);
-  List<DropdownMenuEntry<T>> typeEntries ();
-  T type (I item);
-  I setType (I item, T type);
   I setTags (I item, List<String> tags);
   I setLink (I item, String? link);
   I setRecommender (I item, String? recommender);
@@ -339,7 +336,14 @@ abstract class EditConsumeState<W extends EditConsume<I>, I extends Consume, T> 
   void delete (Store store, I item);
   void recreate (Store store, I item);
 
+  bool hasType () => false;
+  String mainName () => 'Title';
+  List<DropdownMenuEntry<T>> typeEntries () => [];
+  T? type (I item) => null;
+  I setType (I item, T type) => item;
+
   bool hasAux () => false;
+  String auxName () => '';
   String? aux (I item) => null;
   I setAux (I item, String? aux) => item;
 
@@ -354,120 +358,122 @@ abstract class EditConsumeState<W extends EditConsume<I>, I extends Consume, T> 
   I setFinished (I item, bool finished) => item;
 
   @override Widget build (BuildContext ctx) => Scaffold(
-    appBar: AppBar(
-      title: const Text('Edit'),
-    ),
+    appBar: AppBar(title: const Text('Edit')),
     body: Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-      child: Form(
-        key: _formKey,
-        child: Column(
-          children: <Widget>[
-            textField(main(_item), 'Title', (text) {
-              _item = setMain(_item, text);
-            }),
-            if (hasAux()) const SizedBox(height: 12),
-            if (hasAux()) textField(aux(_item) ?? '', 'Director', (text) {
-              _item = setAux(_item, beNull(text));
-            }),
-            const SizedBox(height: 24),
-            Row(children: <Widget>[
-              Expanded(child: DropdownMenu<T>(
-                initialSelection: type(_item),
-                label: const Text('Type'),
-                dropdownMenuEntries: typeEntries(),
-                onSelected: (T? type) {
-                  setState(() {
-                    if (type is T) _item = setType(_item, type);
-                  });
-                },
-              )),
-              const SizedBox(width: 32),
-              Expanded(child: textField2(_item.tags.join(' '), 'Tags', (text) => setState(() {
-                _item = setTags(_item, text.isEmpty ? <String>[] : text.split(' '));
-              }))),
-            ]),
-            Row(children: <Widget>[
-              Expanded(child: textField2(_item.link ?? '', 'Link', (text) => setState(() {
-                _item = setLink(_item, beNull(text));
-              }))),
-              const SizedBox(width: 32),
-              Expanded(child: textField2(_item.recommender ?? '', 'Recommender', (text) => setState(() {
-                _item = setRecommender(_item, beNull(text));
-              }))),
-            ]),
-            const SizedBox(height: 24),
-            Row(children: <Widget>[
-              Expanded(child: DropdownMenu<Rating>(
-                initialSelection: _item.rating,
-                label: const Text('Rating'),
-                dropdownMenuEntries: ratingEntries,
-                onSelected: (Rating? rating) {
-                  setState(() {
-                    if (rating is Rating) _item = setRating(_item, rating);
-                  });
-                },
-              )),
-              if (hasAbandoned()) Expanded(child: CheckboxListTile(
-                title: const Text('Abandoned'),
-                value: abandoned(_item),
-                onChanged: (selected) {
-                  setState(() {
-                    if (selected is bool) _item = setAbandoned(_item, selected);
-                  });
-                },
-              )),
-              if (hasFinished()) Expanded(child: CheckboxListTile(
-                title: const Text('Saw Credits?'),
-                value: finished(_item),
-                onChanged: (selected) {
-                  setState(() {
-                    if (selected is bool) _item = setFinished(_item, selected);
-                  });
-                },
-              )),
-            ]),
-            const SizedBox(height: 12),
-            Row(children: <Widget>[
-              Expanded(child: textFieldDate(ctx, _item.started ?? '', 'Started', (date) => setState(() {
-                _item = setStarted(_item, date);
-              }))),
-              const SizedBox(width: 32),
-              Expanded(child: textFieldDate(ctx, _item.completed ?? '', 'Completed', (date) => setState(() {
-                _item = setCompleted(_item, date);
-              }))),
-            ]),
-            const SizedBox(height: 24),
-            Text('Created: ${createdFmt.format(_item.created.toDate())}'),
-            const SizedBox(height: 24),
-            Row(children: <Widget>[
-              IconButton(
-                icon: const Icon(Icons.delete),
-                tooltip: 'Delete item',
-                onPressed: () {
-                  final store = Provider.of<Store>(ctx, listen: false);
-                  delete(store, _item);
-                  Navigator.pop(ctx);
-                  ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-                    content: Text('Deleted item: ${main(_item)}'),
-                    action: SnackBarAction(
-                      label: 'Undo',
-                      onPressed: () => recreate(store, _item)
-                    ),
-                  ));
-                },
-              ),
-              const Spacer(),
-              OutlinedButton(child: const Text('Cancel'), onPressed: () => Navigator.pop(ctx)),
-              const SizedBox(width: 32),
-              FilledButton(child: const Text('Update'), onPressed: () {
-                update(Provider.of<Store>(ctx, listen: false), widget.item, _item);
-                Navigator.pop(ctx);
-              }),
-            ]),
-          ]
-        ),
-      ),
+      child: Form(key: _formKey, child: Column(children: <Widget>[
+        textField(main(_item), mainName(), (text) {
+          _item = setMain(_item, text);
+        }),
+        const SizedBox(height: 24),
+        Row(children: <Widget>[
+          if (hasType()) Expanded(child: DropdownMenu<T>(
+            initialSelection: type(_item),
+            label: const Text('Type'),
+            dropdownMenuEntries: typeEntries(),
+            onSelected: (T? type) {
+              setState(() {
+                if (type is T) _item = setType(_item, type);
+              });
+            },
+          )),
+          if (hasType()) const SizedBox(width: 32),
+          if (hasAux()) Expanded(child: textField(aux(_item) ?? '', auxName(), (text) {
+            _item = setAux(_item, beNull(text));
+          })),
+          if (hasAux()) const SizedBox(width: 32),
+          Expanded(child: textField2(_item.tags.join(' '), 'Tags', (text) => setState(() {
+            _item = setTags(_item, text.isEmpty ? <String>[] : text.split(' '));
+          }))),
+        ]),
+        const SizedBox(height: 24),
+        Row(children: <Widget>[
+          Expanded(child: textField2(_item.link ?? '', 'Link', (text) => setState(() {
+            _item = setLink(_item, beNull(text));
+          }))),
+          const SizedBox(width: 32),
+          Expanded(child: textField2(_item.recommender ?? '', 'Recommender', (text) => setState(() {
+            _item = setRecommender(_item, beNull(text));
+          }))),
+        ]),
+        const SizedBox(height: 24),
+        ..._miscBits(ctx),
+        const SizedBox(height: 24),
+        Text('Created: ${createdFmt.format(_item.created.toDate())}'),
+        const SizedBox(height: 24),
+        Row(children: <Widget>[
+          IconButton(
+            icon: const Icon(Icons.delete),
+            tooltip: 'Delete item',
+            onPressed: () {
+              final store = Provider.of<Store>(ctx, listen: false);
+              delete(store, _item);
+              Navigator.pop(ctx);
+              ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                content: Text('Deleted item: ${main(_item)}'),
+                action: SnackBarAction(
+                  label: 'Undo',
+                  onPressed: () => recreate(store, _item)
+                ),
+              ));
+            },
+          ),
+          const Spacer(),
+          OutlinedButton(child: const Text('Cancel'), onPressed: () => Navigator.pop(ctx)),
+          const SizedBox(width: 32),
+          FilledButton(child: const Text('Update'), onPressed: () {
+            update(Provider.of<Store>(ctx, listen: false), widget.item, _item);
+            Navigator.pop(ctx);
+          }),
+        ]),
+      ])),
     ),
   );
+
+  List<Widget> _miscBits (BuildContext ctx) {
+    final completed = textFieldDate(ctx, _item.completed ?? '', 'Completed', (date) => setState(() {
+      _item = setCompleted(_item, date);
+    }));
+    final row = <Widget>[
+      Expanded(child: DropdownMenu<Rating>(
+        initialSelection: _item.rating,
+        label: const Text('Rating'),
+        dropdownMenuEntries: ratingEntries,
+        onSelected: (Rating? rating) {
+          setState(() {
+            if (rating is Rating) _item = setRating(_item, rating);
+          });
+        },
+      )),
+      if (hasAbandoned()) const SizedBox(width: 32),
+      if (hasAbandoned()) Expanded(child: CheckboxListTile(
+        title: const Text('Abandoned'),
+        value: abandoned(_item),
+        onChanged: (selected) {
+          setState(() {
+            if (selected is bool) _item = setAbandoned(_item, selected);
+          });
+        },
+      )),
+      if (hasFinished()) const SizedBox(width: 32),
+      if (hasFinished()) Expanded(child: CheckboxListTile(
+        title: const Text('Saw Credits?'),
+        value: finished(_item),
+        onChanged: (selected) {
+          setState(() {
+            if (selected is bool) _item = setFinished(_item, selected);
+          });
+        },
+      )),
+      if (!_item.isProtracted()) const SizedBox(width: 32),
+      if (!_item.isProtracted()) Expanded(child: completed),
+    ];
+    return _item.isProtracted() ? [Row(children: row), Row(children: <Widget>[
+      Expanded(child: textFieldDate(ctx, _item.started ?? '', 'Started', (date) => setState(() {
+        _item = setStarted(_item, date);
+      }))),
+      const SizedBox(width: 32),
+      Expanded(child: completed),
+    ])] : [Row(children: row)];
+  }
 }

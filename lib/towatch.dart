@@ -54,10 +54,12 @@ class EditWatchItemState extends EditConsumeState<EditWatchItem, Watch, WatchTyp
   @override String main (Watch item) => item.title;
   @override Watch setMain (Watch item, String main) => item.rebuild((b) => b..title = main);
   @override bool hasAux () => true;
+  @override String auxName () => 'Director';
   @override String? aux (Watch item) => item.director;
   @override Watch setAux (Watch item, String? aux) => item.rebuild((b) => b..title = aux);
   @override List<DropdownMenuEntry<WatchType>> typeEntries () => WatchType.values.map(
     (rr) => DropdownMenuEntry<WatchType>(value: rr, label: rr.label)).toList();
+  @override bool hasType () => true;
   @override WatchType type (Watch item) => item.type;
   @override Watch setType (Watch item, WatchType type) => item.rebuild((b) => b..type = type);
   @override Watch setTags (Watch item, List<String> tags) =>

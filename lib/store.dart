@@ -117,6 +117,29 @@ class Store {
     }).whereType<Play>();
   }
 
+  // Dine
+
+  Stream<(List<Dine> active, List<Dine> undine, List<Dine> recent)> dineItems (int recent) =>
+    _items('dine', _decodeDine, recent);
+  Stream<Iterable<Dine>> dineHistory () =>
+    _collection('dine').where('completed', isNull: false).snapshots().map(_decodeDine);
+
+  Future<void> createDine (String name, String? location) => recreateDine(Dine(
+    (b) => b..name = name
+            ..location = location ?? ''
+            ..created = Timestamp.now()));
+  Future<void> recreateDine (Dine item) => _recreate('dine', Dine.serializer, item);
+  Future<void> updateDine (Dine orig, Dine updated) =>
+    _collection('dine').doc(orig.id).update(_itemDelta(Dine.serializer, orig, updated));
+  Future<void> deleteDine (Dine item) => _collection('dine').doc(item.id).delete();
+
+  Iterable<Dine> _decodeDine (QuerySnapshot<Map<String, dynamic>> snap) {
+    return snap.docs.map((dd) {
+      var item = serializers.deserializeWith<Dine>(Dine.serializer, dd.data());
+      return item?.rebuild((bb) => bb..id = dd.id);
+    }).whereType<Dine>();
+  }
+
   // Generic bits
 
   CollectionReference<Map<String, dynamic>> _collection (String name) {

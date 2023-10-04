@@ -34,6 +34,7 @@ abstract class Item {
   String? get started;
   String? get completed;
 
+  bool isProtracted ();
   bool startable ();
   bool filter (Filter filter);
 }
@@ -73,6 +74,7 @@ abstract class Read implements Item, Consume, Built<Read, ReadBuilder> {
   ReadType get type;
   bool get abandoned;
 
+  @override bool isProtracted () => true;
   @override bool startable () => started == null;
   @override bool filter (Filter filter) =>
     filter(title) || filter(author) || filter(recommender) || filter(link) || tags.any(filter);
@@ -99,8 +101,7 @@ abstract class Watch implements Item, Consume, Built<Watch, WatchBuilder> {
   WatchType get type;
   bool get abandoned;
 
-  bool isProtracted () => type == WatchType.show || type == WatchType.video;
-
+  @override bool isProtracted () => type == WatchType.show || type == WatchType.video;
   @override bool startable () => started == null && isProtracted();
   @override bool filter (Filter filter) =>
     filter(title) || filter(director) || filter(recommender) || filter(link) || tags.any(filter);
@@ -126,8 +127,7 @@ abstract class Hear implements Item, Consume, Built<Hear, HearBuilder> {
   String? get artist;
   HearType get type;
 
-  bool isProtracted () => type == HearType.podcast;
-
+  @override bool isProtracted () => type == HearType.podcast;
   @override bool startable () => started == null && isProtracted();
   @override bool filter (Filter filter) =>
     filter(title) || filter(artist) || filter(recommender) || filter(link) || tags.any(filter);
@@ -143,12 +143,28 @@ abstract class Play implements Item, Consume, Built<Play, PlayBuilder> {
   String get platform;
   bool get credits;
 
+  @override bool isProtracted () => true;
   @override bool startable () => started == null;
   @override bool filter (Filter filter) =>
     filter(title) || filter(platform) || filter(recommender) || filter(link) || tags.any(filter);
 
   factory Play([void Function(PlayBuilder) updates]) = _$Play;
   Play._();
+}
+
+abstract class Dine implements Item, Consume, Built<Dine, DineBuilder> {
+  static Serializer<Dine> get serializer => _$dineSerializer;
+
+  String get name;
+  String? get location;
+
+  @override bool isProtracted () => false;
+  @override bool startable () => false;
+  @override bool filter (Filter filter) =>
+    filter(name) || filter(location) || filter(recommender) || filter(link) || tags.any(filter);
+
+  factory Dine([void Function(DineBuilder) updates]) = _$Dine;
+  Dine._();
 }
 
 abstract class Build implements Item, Built<Build, BuildBuilder> {
@@ -159,6 +175,7 @@ abstract class Build implements Item, Built<Build, BuildBuilder> {
   factory Build([void Function(BuildBuilder) updates]) = _$Build;
   Build._();
 
+  @override bool isProtracted () => true;
   @override bool startable () => false; // TODO
   @override bool filter (Filter filter) => filter(text);
 }
@@ -242,6 +259,24 @@ abstract class PlayBuilder implements Builder<Play, PlayBuilder> {
   PlayBuilder._();
 }
 
+abstract class DineBuilder implements Builder<Dine, DineBuilder> {
+  Timestamp? created;
+  ListBuilder<String> tags = ListBuilder<String>();
+  String? link;
+  String? completed;
+
+  Rating rating = Rating.none;
+  String? recommender;
+
+  String? id;
+  String? name;
+  String? location;
+  String? started;
+
+  factory DineBuilder() = _$DineBuilder;
+  DineBuilder._();
+}
+
 // manual serialization plumbing, yay!
 
 class TimestampSerializer implements PrimitiveSerializer<Timestamp> {
@@ -320,6 +355,7 @@ class HearTypeSerializer implements PrimitiveSerializer<HearType> {
   Watch,
   Hear,
   Play,
+  Dine,
   Build,
 ])
 final Serializers serializers = (_$serializers.toBuilder()
