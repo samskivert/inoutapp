@@ -45,129 +45,35 @@ IconData iconFor (WatchType type) {
   }
 }
 
-class EditWatchItem extends StatefulWidget {
-  const EditWatchItem ({super.key, required this.item});
-  final Watch item;
-  @override EditWatchItemState createState () => EditWatchItemState(item);
+class EditWatchItem extends EditConsume<Watch> {
+  const EditWatchItem ({super.key, required super.item});
+  @override EditWatchItemState createState () => EditWatchItemState();
 }
 
-final typeEntries = WatchType.values.map(
-  (rr) => DropdownMenuEntry<WatchType>(value: rr, label: rr.label)).toList();
-
-class EditWatchItemState extends State<EditWatchItem> {
-  final _formKey = GlobalKey<FormState>();
-  Watch _item;
-
-  EditWatchItemState (Watch item) : _item = item;
-
-  @override Widget build (BuildContext ctx) => Scaffold(
-    appBar: AppBar(
-      title: const Text('Edit'),
-    ),
-    body: Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-      child: Form(
-        key: _formKey,
-        child: Column(
-          children: <Widget>[
-            textField(_item.title, 'Title', (text) {
-              _item = _item.rebuild((b) => b..title = text);
-            }),
-            const SizedBox(height: 12),
-            textField(_item.director ?? '', 'Director', (text) {
-              _item = _item.rebuild((b) => b..director = beNull(text));
-            }),
-            const SizedBox(height: 24),
-            Row(children: <Widget>[
-              Expanded(child: DropdownMenu<WatchType>(
-                initialSelection: _item.type,
-                label: const Text('Type'),
-                dropdownMenuEntries: typeEntries,
-                onSelected: (WatchType? type) {
-                  setState(() {
-                    if (type is WatchType) _item = _item.rebuild((b) => b..type = type);
-                  });
-                },
-              )),
-              const SizedBox(width: 32),
-              Expanded(child: textField2(_item.tags.join(' '), 'Tags', (text) => setState(() {
-                _item = _item.rebuild((b) {
-                  text.isEmpty ? b.tags.clear() : b.tags.replace(text.split(' '));
-                });
-              }))),
-            ]),
-            Row(children: <Widget>[
-              Expanded(child: textField2(_item.link ?? '', 'Link', (text) => setState(() {
-                _item = _item.rebuild((b) => b..link = beNull(text));
-              }))),
-              const SizedBox(width: 32),
-              Expanded(child: textField2(_item.recommender ?? '', 'Recommender', (text) => setState(() {
-                _item = _item.rebuild((b) => b..recommender = beNull(text));
-              }))),
-            ]),
-            const SizedBox(height: 24),
-            Row(children: <Widget>[
-              Expanded(child: DropdownMenu<Rating>(
-                initialSelection: _item.rating,
-                label: const Text('Rating'),
-                dropdownMenuEntries: ratingEntries,
-                onSelected: (Rating? rating) {
-                  setState(() {
-                    if (rating is Rating) _item = _item.rebuild((b) => b..rating = rating);
-                  });
-                },
-              )),
-              Expanded(child: CheckboxListTile(
-                title: const Text('Abandoned'),
-                value: _item.abandoned,
-                onChanged: (selected) {
-                  setState(() {
-                    if (selected is bool) _item = _item.rebuild((b) => b..abandoned = selected);
-                  });
-                },
-              )),
-            ]),
-            const SizedBox(height: 12),
-            Row(children: <Widget>[
-              Expanded(child: textFieldDate(ctx, _item.started ?? '', 'Started', (date) => setState(() {
-                _item = _item.rebuild((b) => b..started = date);
-              }))),
-              const SizedBox(width: 32),
-              Expanded(child: textFieldDate(ctx, _item.completed ?? '', 'Completed', (date) => setState(() {
-                _item = _item.rebuild((b) => b..completed = date);
-              }))),
-            ]),
-            const SizedBox(height: 24),
-            Text('Created: ${createdFmt.format(_item.created.toDate())}'),
-            const SizedBox(height: 24),
-            Row(children: <Widget>[
-              IconButton(
-                icon: const Icon(Icons.delete),
-                tooltip: 'Delete item',
-                onPressed: () {
-                  final store = Provider.of<Store>(ctx, listen: false);
-                  store.deleteWatch(_item);
-                  Navigator.pop(ctx);
-                  ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-                    content: Text('Deleted item: ${_item.title}'),
-                    action: SnackBarAction(
-                      label: 'Undo',
-                      onPressed: () => store.recreateWatch(_item)
-                    ),
-                  ));
-                },
-              ),
-              const Spacer(),
-              OutlinedButton(child: const Text('Cancel'), onPressed: () => Navigator.pop(ctx)),
-              const SizedBox(width: 32),
-              FilledButton(child: const Text('Update'), onPressed: () {
-                Provider.of<Store>(ctx, listen: false).updateWatch(widget.item, _item);
-                Navigator.pop(ctx);
-              }),
-            ]),
-          ]
-        ),
-      ),
-    ),
-  );
+class EditWatchItemState extends EditConsumeState<EditWatchItem, Watch, WatchType> {
+  @override String main (Watch item) => item.title;
+  @override Watch setMain (Watch item, String main) => item.rebuild((b) => b..title = main);
+  @override String? aux (Watch item) => item.director;
+  @override Watch setAux (Watch item, String? aux) => item.rebuild((b) => b..title = aux);
+  @override List<DropdownMenuEntry<WatchType>> typeEntries () => WatchType.values.map(
+    (rr) => DropdownMenuEntry<WatchType>(value: rr, label: rr.label)).toList();
+  @override WatchType type (Watch item) => item.type;
+  @override Watch setType (Watch item, WatchType type) => item.rebuild((b) => b..type = type);
+  @override Watch setTags (Watch item, List<String> tags) =>
+    item.rebuild((b) => tags.isEmpty ? b.tags.clear() : b.tags.replace(tags));
+  @override Watch setLink (Watch item, String? link) => item.rebuild((b) => b..link = link);
+  @override Watch setRecommender (Watch item, String? recommender) =>
+    item.rebuild((b) => b..recommender = recommender);
+  @override Watch setRating (Watch item, Rating rating) => item.rebuild((b) => b..rating = rating);
+  @override bool hasAbandoned () => true;
+  @override bool abandoned (Watch item) => item.abandoned;
+  @override Watch setAbandoned (Watch item, bool abandoned) =>
+    item.rebuild((b) => b..abandoned = abandoned);
+  @override Watch setStarted (Watch item, String? started) =>
+    item.rebuild((b) => b..started = started);
+  @override Watch setCompleted (Watch item, String? completed) =>
+    item.rebuild((b) => b..completed = completed);
+  @override void update (Store store, Watch orig, Watch updated) => store.updateWatch(orig, updated);
+  @override void delete (Store store, Watch item) => store.deleteWatch(item);
+  @override void recreate (Store store, Watch item) => store.recreateWatch(item);
 }

@@ -29,7 +29,7 @@ class HearItem extends StatelessWidget {
   final Hear item;
 
   @override Widget build (BuildContext context) => consumeRow(
-    context, item, item.title, item.artist, iconFor(item.type), item.abandoned,
+    context, item, item.title, item.artist, iconFor(item.type), false,
     () => updateHear(context, item, (b) => b..started = dateFmt.format(DateTime.now())),
     () => updateHear(context, item, (b) => b..completed = dateFmt.format(DateTime.now())),
     () => updateHear(context, item, (b) => b..completed = null),
@@ -45,129 +45,31 @@ IconData iconFor (HearType type) {
   }
 }
 
-class EditHearItem extends StatefulWidget {
-  const EditHearItem ({super.key, required this.item});
-  final Hear item;
-  @override EditHearItemState createState () => EditHearItemState(item);
+class EditHearItem extends EditConsume<Hear> {
+  const EditHearItem ({super.key, required super.item});
+  @override EditHearItemState createState () => EditHearItemState();
 }
 
-final typeEntries = HearType.values.map(
-  (rr) => DropdownMenuEntry<HearType>(value: rr, label: rr.label)).toList();
-
-class EditHearItemState extends State<EditHearItem> {
-  final _formKey = GlobalKey<FormState>();
-  Hear _item;
-
-  EditHearItemState (Hear item) : _item = item;
-
-  @override Widget build (BuildContext ctx) => Scaffold(
-    appBar: AppBar(
-      title: const Text('Edit'),
-    ),
-    body: Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-      child: Form(
-        key: _formKey,
-        child: Column(
-          children: <Widget>[
-            textField(_item.title, 'Title', (text) {
-              _item = _item.rebuild((b) => b..title = text);
-            }),
-            const SizedBox(height: 12),
-            textField(_item.artist ?? '', 'Artist/Host', (text) {
-              _item = _item.rebuild((b) => b..artist = beNull(text));
-            }),
-            const SizedBox(height: 24),
-            Row(children: <Widget>[
-              Expanded(child: DropdownMenu<HearType>(
-                initialSelection: _item.type,
-                label: const Text('Type'),
-                dropdownMenuEntries: typeEntries,
-                onSelected: (HearType? type) {
-                  setState(() {
-                    if (type is HearType) _item = _item.rebuild((b) => b..type = type);
-                  });
-                },
-              )),
-              const SizedBox(width: 32),
-              Expanded(child: textField2(_item.tags.join(' '), 'Tags', (text) => setState(() {
-                _item = _item.rebuild((b) {
-                  text.isEmpty ? b.tags.clear() : b.tags.replace(text.split(' '));
-                });
-              }))),
-            ]),
-            Row(children: <Widget>[
-              Expanded(child: textField2(_item.link ?? '', 'Link', (text) => setState(() {
-                _item = _item.rebuild((b) => b..link = beNull(text));
-              }))),
-              const SizedBox(width: 32),
-              Expanded(child: textField2(_item.recommender ?? '', 'Recommender', (text) => setState(() {
-                _item = _item.rebuild((b) => b..recommender = beNull(text));
-              }))),
-            ]),
-            const SizedBox(height: 24),
-            Row(children: <Widget>[
-              Expanded(child: DropdownMenu<Rating>(
-                initialSelection: _item.rating,
-                label: const Text('Rating'),
-                dropdownMenuEntries: ratingEntries,
-                onSelected: (Rating? rating) {
-                  setState(() {
-                    if (rating is Rating) _item = _item.rebuild((b) => b..rating = rating);
-                  });
-                },
-              )),
-              Expanded(child: CheckboxListTile(
-                title: const Text('Abandoned'),
-                value: _item.abandoned,
-                onChanged: (selected) {
-                  setState(() {
-                    if (selected is bool) _item = _item.rebuild((b) => b..abandoned = selected);
-                  });
-                },
-              )),
-            ]),
-            const SizedBox(height: 12),
-            Row(children: <Widget>[
-              Expanded(child: textFieldDate(ctx, _item.started ?? '', 'Started', (date) => setState(() {
-                _item = _item.rebuild((b) => b..started = date);
-              }))),
-              const SizedBox(width: 32),
-              Expanded(child: textFieldDate(ctx, _item.completed ?? '', 'Completed', (date) => setState(() {
-                _item = _item.rebuild((b) => b..completed = date);
-              }))),
-            ]),
-            const SizedBox(height: 24),
-            Text('Created: ${createdFmt.format(_item.created.toDate())}'),
-            const SizedBox(height: 24),
-            Row(children: <Widget>[
-              IconButton(
-                icon: const Icon(Icons.delete),
-                tooltip: 'Delete item',
-                onPressed: () {
-                  final store = Provider.of<Store>(ctx, listen: false);
-                  store.deleteHear(_item);
-                  Navigator.pop(ctx);
-                  ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-                    content: Text('Deleted item: ${_item.title}'),
-                    action: SnackBarAction(
-                      label: 'Undo',
-                      onPressed: () => store.recreateHear(_item)
-                    ),
-                  ));
-                },
-              ),
-              const Spacer(),
-              OutlinedButton(child: const Text('Cancel'), onPressed: () => Navigator.pop(ctx)),
-              const SizedBox(width: 32),
-              FilledButton(child: const Text('Update'), onPressed: () {
-                Provider.of<Store>(ctx, listen: false).updateHear(widget.item, _item);
-                Navigator.pop(ctx);
-              }),
-            ]),
-          ]
-        ),
-      ),
-    ),
-  );
+class EditHearItemState extends EditConsumeState<EditHearItem, Hear, HearType> {
+  @override String main (Hear item) => item.title;
+  @override Hear setMain (Hear item, String main) => item.rebuild((b) => b..title = main);
+  @override String? aux (Hear item) => item.artist;
+  @override Hear setAux (Hear item, String? aux) => item.rebuild((b) => b..title = aux);
+  @override List<DropdownMenuEntry<HearType>> typeEntries () => HearType.values.map(
+    (rr) => DropdownMenuEntry<HearType>(value: rr, label: rr.label)).toList();
+  @override HearType type (Hear item) => item.type;
+  @override Hear setType (Hear item, HearType type) => item.rebuild((b) => b..type = type);
+  @override Hear setTags (Hear item, List<String> tags) =>
+    item.rebuild((b) => tags.isEmpty ? b.tags.clear() : b.tags.replace(tags));
+  @override Hear setLink (Hear item, String? link) => item.rebuild((b) => b..link = link);
+  @override Hear setRecommender (Hear item, String? recommender) =>
+    item.rebuild((b) => b..recommender = recommender);
+  @override Hear setRating (Hear item, Rating rating) => item.rebuild((b) => b..rating = rating);
+  @override Hear setStarted (Hear item, String? started) =>
+    item.rebuild((b) => b..started = started);
+  @override Hear setCompleted (Hear item, String? completed) =>
+    item.rebuild((b) => b..completed = completed);
+  @override void update (Store store, Hear orig, Hear updated) => store.updateHear(orig, updated);
+  @override void delete (Store store, Hear item) => store.deleteHear(item);
+  @override void recreate (Store store, Hear item) => store.recreateHear(item);
 }
