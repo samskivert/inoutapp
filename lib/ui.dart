@@ -2,7 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
+import 'package:url_launcher/url_launcher.dart';
 import 'model.dart';
+import 'store.dart';
 
 const title = 'Input/Output';
 
@@ -16,24 +18,28 @@ class InOutModel extends ChangeNotifier {
   }
 }
 
+IconData iconFor (ItemType type) => switch (type) {
+  ItemType.journal => Icons.calendar_month,
+  ItemType.read => Icons.menu_book,
+  ItemType.watch => Icons.local_movies,
+  ItemType.hear => Icons.volume_up,
+  ItemType.play => Icons.videogame_asset,
+  ItemType.dine => Icons.local_dining,
+  ItemType.build => Icons.build,
+};
+
 AppBar appBar (BuildContext ctx) {
-  IconButton listIcon (ItemType page, IconData icon, String tooltip) {
+  IconButton listIcon (ItemType page) {
     return IconButton(
-      icon: Icon(icon),
-      tooltip: tooltip,
+      icon: Icon(iconFor(page)),
+      tooltip: page.label,
       onPressed: () => Provider.of<InOutModel>(ctx, listen: false).page = page,
     );
   }
   return AppBar(
     title: const Text(title),
     actions: <Widget>[
-      listIcon(ItemType.journal, Icons.calendar_month, "Journal"),
-      listIcon(ItemType.read, Icons.menu_book, "To Read"),
-      listIcon(ItemType.watch, Icons.local_movies, "To See"),
-      listIcon(ItemType.hear, Icons.music_video, "To Hear"),
-      listIcon(ItemType.play, Icons.videogame_asset, "To Play"),
-      listIcon(ItemType.dine, Icons.local_dining, "To Dine"),
-      listIcon(ItemType.build, Icons.build, "To Build"),
+      ...ItemType.values.map(listIcon),
       IconButton(
         icon: const Icon(Icons.logout),
         tooltip: 'Logout',
@@ -46,8 +52,8 @@ AppBar appBar (BuildContext ctx) {
   );
 }
 
-Widget header (BuildContext ctx, String label) => Row(children: <Widget>[
-  const Icon(Icons.menu_book),
+Widget header (BuildContext ctx, ItemType type, String label) => Row(children: <Widget>[
+  Icon(iconFor(type)),
   const SizedBox(width: 5),
   Text(label, style: Theme.of(ctx).textTheme.titleMedium),
 ]);
@@ -62,23 +68,93 @@ class ItemEntry<I extends Item> extends Entry<I> {
   ItemEntry(this.item);
 }
 
+enum PageMode { current, history }
+class PageModeModel extends ChangeNotifier {
+  PageMode _mode = PageMode.current;
+
+  PageMode get mode => _mode;
+  set mode (PageMode mode) {
+    _mode = mode;
+    notifyListeners();
+  }
+}
+
+abstract class ItemPageState<W extends StatefulWidget, I extends Item> extends State<W> {
+  bool _historyMode = false;
+  String _filter = '';
+  final _filterCtrl = TextEditingController();
+
+  @override void dispose () {
+    _filterCtrl.dispose();
+    super.dispose();
+  }
+
+  ItemType itemType ();
+  Stream<List<Entry<I>>> currentItems (Store store);
+  Stream<List<Entry<I>>> historyItems (Store store, String filter);
+  String createPlaceholder ();
+  String createItem (Store store, String text);
+  Widget mkItem (I item);
+
+  @override Widget build (BuildContext context) {
+    var store = Provider.of<Store>(context);
+    var items = _historyMode ? historyItems(store, _filter) : currentItems(store);
+    _filterCtrl.text = _filter; // this is ridiculous
+    var footer = _historyMode ?
+      Row(children: <Widget>[
+        OutlinedButton(child: const Text('History'), onPressed: () {
+          setState(() {
+            _historyMode = false;
+          });
+        }),
+        const SizedBox(width: 12),
+        Expanded(child: TextFormField(
+          controller: _filterCtrl,
+          decoration: const InputDecoration(hintText: 'Filter'),
+          onFieldSubmitted: (text) => setState(() {
+            _filter = text;
+          }),
+        )),
+      ]) :
+      Row(children: <Widget>[
+        OutlinedButton(child: const Text('Current'), onPressed: () {
+          setState(() {
+            _historyMode = true;
+          });
+        }),
+        const SizedBox(width: 12),
+        ...itemFooter(context, createPlaceholder(), createItem),
+      ]);
+    return ChangeNotifierProvider(
+      create: (ctx) => PageModeModel(),
+      child: Scaffold(
+        appBar: appBar(context),
+        body: Center(child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 12),
+          child: itemList<I>(items, itemType(), mkItem)
+        )),
+        bottomNavigationBar: BottomAppBar(height: 60, child: footer),
+      )
+    );
+  }
+}
+
 List<Entry<I>> entries<I extends Item> (String header, Iterable<I> items) =>
   [HeaderEntry<I>(header), ...items.map((ii) => ItemEntry<I>(ii))];
 
 List<Entry<I>> entries2<I extends Item> (String header1, Iterable<I> items1,
                                          String header2, Iterable<I> items2) =>
-  [HeaderEntry<I>(header1), ...items1.map((ii) => ItemEntry<I>(ii)),
-   HeaderEntry<I>(header2), ...items2.map((ii) => ItemEntry<I>(ii))];
+  [if (items1.isNotEmpty) HeaderEntry<I>(header1), ...items1.map((ii) => ItemEntry<I>(ii)),
+   if (items2.isNotEmpty) HeaderEntry<I>(header2), ...items2.map((ii) => ItemEntry<I>(ii))];
 
 List<Entry<I>> entries3<I extends Item> (String header1, Iterable<I> items1,
                                          String header2, Iterable<I> items2,
                                          String header3, Iterable<I> items3) =>
-  [HeaderEntry<I>(header1), ...items1.map((ii) => ItemEntry<I>(ii)),
-   HeaderEntry<I>(header2), ...items2.map((ii) => ItemEntry<I>(ii)),
-   HeaderEntry<I>(header3), ...items3.map((ii) => ItemEntry<I>(ii))];
+  [if (items1.isNotEmpty) HeaderEntry<I>(header1), ...items1.map((ii) => ItemEntry<I>(ii)),
+   if (items2.isNotEmpty) HeaderEntry<I>(header2), ...items2.map((ii) => ItemEntry<I>(ii)),
+   if (items3.isNotEmpty) HeaderEntry<I>(header3), ...items3.map((ii) => ItemEntry<I>(ii))];
 
 List<Entry<I>> annuate<I extends Item> (Iterable<I> items, String filter) {
-  print("annuating " + filter);
   var f = makeFilter(filter);
   var sorted = items.where((ii) => ii.filter(f)).toList();
   sorted.sort((aa, bb) => bb.completed!.compareTo(aa.completed!));
@@ -95,7 +171,9 @@ List<Entry<I>> annuate<I extends Item> (Iterable<I> items, String filter) {
   return annuated;
 }
 
-Widget itemList<I extends Item> (Stream<List<Entry<I>>> stream, Widget Function(I) mkItem) {
+Widget itemList<I extends Item> (
+  Stream<List<Entry<I>>> stream, ItemType type, Widget Function(I) mkItem
+) {
   return StreamBuilder<List<Entry<I>>>(
     stream: stream,
     builder: (BuildContext ctx, AsyncSnapshot<List<Entry<I>>> items) {
@@ -106,7 +184,7 @@ Widget itemList<I extends Item> (Stream<List<Entry<I>>> stream, Widget Function(
         separatorBuilder: (BuildContext ctx, int index) => const Divider(),
         itemCount: entries.length,
         itemBuilder: (BuildContext ctx, int index) => switch (entries[index]) {
-          HeaderEntry<I> hh => header(ctx, hh.header),
+          HeaderEntry<I> hh => header(ctx, type, hh.header),
           ItemEntry<I> ii => mkItem(ii.item)
         },
       );
@@ -115,12 +193,12 @@ Widget itemList<I extends Item> (Stream<List<Entry<I>>> stream, Widget Function(
 }
 
 List<Widget> itemFooter (
-  BuildContext ctx, String hint, String Function(BuildContext, String) onCreate
+  BuildContext ctx, String hint, String Function(Store, String) onCreate
 ) {
   final controller = TextEditingController();
   void createItem (String text) {
     if (text.isEmpty) return;
-    var created = onCreate(ctx, text);
+    var created = onCreate(Provider.of<Store>(ctx, listen: false), text);
     controller.text = '';
     ScaffoldMessenger.of(ctx).showSnackBar(SnackBar(content: Text('Created item: $created')));
   }
@@ -134,6 +212,49 @@ List<Widget> itemFooter (
     IconButton(icon: const Icon(Icons.add), onPressed: () => createItem(controller.text)),
   ];
 }
+
+Widget consumeRow (
+  BuildContext ctx, Consume item, String title, String? subtitle, IconData? icon, bool abandoned,
+  void Function() onStart, void Function() onComplete, void Function() onUncomplete,
+  Widget Function(BuildContext) onEdit
+) {
+  var (actionTip, actionIcon, action) =
+    item.completed != null ? ('Revert to uncompleted', Icons.check_box, onUncomplete) :
+    item.startable() ? ('Mark as started', Icons.play_arrow, onStart) :
+    ('Mark as completed', Icons.check_box_outline_blank, onComplete);
+  var emoji = abandoned ? '😴' : item.rating != Rating.none ? item.rating.emoji : null;
+  var items = <Widget>[
+    IconButton(icon: Icon(actionIcon), tooltip: actionTip, onPressed: action),
+    Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: <Widget>[
+        Text(title),
+        Text(subtitle ?? '', style: Theme.of(ctx).textTheme.bodySmall?.merge(
+          TextStyle(color: Colors.grey[600]))),
+      ]),
+    const Spacer(),
+    if (emoji != null) Text(emoji, style: Theme.of(ctx).textTheme.titleLarge),
+    if (item.link != null) IconButton(
+      icon: const Icon(Icons.link),
+      tooltip: item.link,
+      onPressed: () async {
+        if (!await launchUrl(Uri.parse(item.link!))) {
+          print('Failed to launch: ${item.link}');
+        }
+      }
+    ),
+    IconButton(
+      icon: const Icon(Icons.edit),
+      tooltip: 'Edit',
+      onPressed: () => Navigator.push(ctx, MaterialPageRoute(builder: onEdit)),
+    ),
+    if (icon != null) Icon(icon, color: Colors.grey[600]),
+  ];
+  return Row(children: items);
+}
+
+final ratingEntries = Rating.values.map(
+  (rr) => DropdownMenuEntry<Rating>(value: rr, label: rr.emoji + rr.label)).toList();
 
 var dateFmt = DateFormat("yyyy-MM-dd");
 var createdFmt = DateFormat.yMMMd().add_jm();

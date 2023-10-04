@@ -8,7 +8,15 @@ part of 'model.dart';
 
 Serializers _$serializers = (new Serializers().toBuilder()
       ..add(Build.serializer)
+      ..add(Hear.serializer)
       ..add(Read.serializer)
+      ..add(Watch.serializer)
+      ..addBuilderFactory(
+          const FullType(BuiltList, const [const FullType(String)]),
+          () => new ListBuilder<String>())
+      ..addBuilderFactory(
+          const FullType(BuiltList, const [const FullType(String)]),
+          () => new ListBuilder<String>())
       ..addBuilderFactory(
           const FullType(BuiltList, const [const FullType(String)]),
           () => new ListBuilder<String>())
@@ -17,6 +25,8 @@ Serializers _$serializers = (new Serializers().toBuilder()
           () => new ListBuilder<String>()))
     .build();
 Serializer<Read> _$readSerializer = new _$ReadSerializer();
+Serializer<Watch> _$watchSerializer = new _$WatchSerializer();
+Serializer<Hear> _$hearSerializer = new _$HearSerializer();
 Serializer<Build> _$buildSerializer = new _$BuildSerializer();
 
 class _$ReadSerializer implements StructuredSerializer<Read> {
@@ -57,10 +67,10 @@ class _$ReadSerializer implements StructuredSerializer<Read> {
         ..add(serializers.serialize(value,
             specifiedType: const FullType(String)));
     }
-    value = object.started;
+    value = object.id;
     if (value != null) {
       result
-        ..add('started')
+        ..add('id')
         ..add(serializers.serialize(value,
             specifiedType: const FullType(String)));
     }
@@ -68,6 +78,13 @@ class _$ReadSerializer implements StructuredSerializer<Read> {
     if (value != null) {
       result
         ..add('link')
+        ..add(serializers.serialize(value,
+            specifiedType: const FullType(String)));
+    }
+    value = object.started;
+    if (value != null) {
+      result
+        ..add('started')
         ..add(serializers.serialize(value,
             specifiedType: const FullType(String)));
     }
@@ -111,13 +128,13 @@ class _$ReadSerializer implements StructuredSerializer<Read> {
           result.type = serializers.deserialize(value,
               specifiedType: const FullType(ReadType))! as ReadType;
           break;
-        case 'started':
-          result.started = serializers.deserialize(value,
-              specifiedType: const FullType(String)) as String?;
-          break;
         case 'abandoned':
           result.abandoned = serializers.deserialize(value,
               specifiedType: const FullType(bool))! as bool;
+          break;
+        case 'id':
+          result.id = serializers.deserialize(value,
+              specifiedType: const FullType(String)) as String?;
           break;
         case 'created':
           result.created = serializers.deserialize(value,
@@ -131,6 +148,291 @@ class _$ReadSerializer implements StructuredSerializer<Read> {
           break;
         case 'link':
           result.link = serializers.deserialize(value,
+              specifiedType: const FullType(String)) as String?;
+          break;
+        case 'started':
+          result.started = serializers.deserialize(value,
+              specifiedType: const FullType(String)) as String?;
+          break;
+        case 'completed':
+          result.completed = serializers.deserialize(value,
+              specifiedType: const FullType(String)) as String?;
+          break;
+        case 'rating':
+          result.rating = serializers.deserialize(value,
+              specifiedType: const FullType(Rating))! as Rating;
+          break;
+        case 'recommender':
+          result.recommender = serializers.deserialize(value,
+              specifiedType: const FullType(String)) as String?;
+          break;
+      }
+    }
+
+    return result.build();
+  }
+}
+
+class _$WatchSerializer implements StructuredSerializer<Watch> {
+  @override
+  final Iterable<Type> types = const [Watch, _$Watch];
+  @override
+  final String wireName = 'Watch';
+
+  @override
+  Iterable<Object?> serialize(Serializers serializers, Watch object,
+      {FullType specifiedType = FullType.unspecified}) {
+    final result = <Object?>[
+      'title',
+      serializers.serialize(object.title,
+          specifiedType: const FullType(String)),
+      'type',
+      serializers.serialize(object.type,
+          specifiedType: const FullType(WatchType)),
+      'abandoned',
+      serializers.serialize(object.abandoned,
+          specifiedType: const FullType(bool)),
+      'created',
+      serializers.serialize(object.created,
+          specifiedType: const FullType(Timestamp)),
+      'tags',
+      serializers.serialize(object.tags,
+          specifiedType:
+              const FullType(BuiltList, const [const FullType(String)])),
+      'rating',
+      serializers.serialize(object.rating,
+          specifiedType: const FullType(Rating)),
+    ];
+    Object? value;
+    value = object.director;
+    if (value != null) {
+      result
+        ..add('director')
+        ..add(serializers.serialize(value,
+            specifiedType: const FullType(String)));
+    }
+    value = object.id;
+    if (value != null) {
+      result
+        ..add('id')
+        ..add(serializers.serialize(value,
+            specifiedType: const FullType(String)));
+    }
+    value = object.link;
+    if (value != null) {
+      result
+        ..add('link')
+        ..add(serializers.serialize(value,
+            specifiedType: const FullType(String)));
+    }
+    value = object.started;
+    if (value != null) {
+      result
+        ..add('started')
+        ..add(serializers.serialize(value,
+            specifiedType: const FullType(String)));
+    }
+    value = object.completed;
+    if (value != null) {
+      result
+        ..add('completed')
+        ..add(serializers.serialize(value,
+            specifiedType: const FullType(String)));
+    }
+    value = object.recommender;
+    if (value != null) {
+      result
+        ..add('recommender')
+        ..add(serializers.serialize(value,
+            specifiedType: const FullType(String)));
+    }
+    return result;
+  }
+
+  @override
+  Watch deserialize(Serializers serializers, Iterable<Object?> serialized,
+      {FullType specifiedType = FullType.unspecified}) {
+    final result = new WatchBuilder();
+
+    final iterator = serialized.iterator;
+    while (iterator.moveNext()) {
+      final key = iterator.current! as String;
+      iterator.moveNext();
+      final Object? value = iterator.current;
+      switch (key) {
+        case 'title':
+          result.title = serializers.deserialize(value,
+              specifiedType: const FullType(String))! as String;
+          break;
+        case 'director':
+          result.director = serializers.deserialize(value,
+              specifiedType: const FullType(String)) as String?;
+          break;
+        case 'type':
+          result.type = serializers.deserialize(value,
+              specifiedType: const FullType(WatchType))! as WatchType;
+          break;
+        case 'abandoned':
+          result.abandoned = serializers.deserialize(value,
+              specifiedType: const FullType(bool))! as bool;
+          break;
+        case 'id':
+          result.id = serializers.deserialize(value,
+              specifiedType: const FullType(String)) as String?;
+          break;
+        case 'created':
+          result.created = serializers.deserialize(value,
+              specifiedType: const FullType(Timestamp))! as Timestamp;
+          break;
+        case 'tags':
+          result.tags.replace(serializers.deserialize(value,
+                  specifiedType: const FullType(
+                      BuiltList, const [const FullType(String)]))!
+              as BuiltList<Object?>);
+          break;
+        case 'link':
+          result.link = serializers.deserialize(value,
+              specifiedType: const FullType(String)) as String?;
+          break;
+        case 'started':
+          result.started = serializers.deserialize(value,
+              specifiedType: const FullType(String)) as String?;
+          break;
+        case 'completed':
+          result.completed = serializers.deserialize(value,
+              specifiedType: const FullType(String)) as String?;
+          break;
+        case 'rating':
+          result.rating = serializers.deserialize(value,
+              specifiedType: const FullType(Rating))! as Rating;
+          break;
+        case 'recommender':
+          result.recommender = serializers.deserialize(value,
+              specifiedType: const FullType(String)) as String?;
+          break;
+      }
+    }
+
+    return result.build();
+  }
+}
+
+class _$HearSerializer implements StructuredSerializer<Hear> {
+  @override
+  final Iterable<Type> types = const [Hear, _$Hear];
+  @override
+  final String wireName = 'Hear';
+
+  @override
+  Iterable<Object?> serialize(Serializers serializers, Hear object,
+      {FullType specifiedType = FullType.unspecified}) {
+    final result = <Object?>[
+      'title',
+      serializers.serialize(object.title,
+          specifiedType: const FullType(String)),
+      'type',
+      serializers.serialize(object.type,
+          specifiedType: const FullType(HearType)),
+      'created',
+      serializers.serialize(object.created,
+          specifiedType: const FullType(Timestamp)),
+      'tags',
+      serializers.serialize(object.tags,
+          specifiedType:
+              const FullType(BuiltList, const [const FullType(String)])),
+      'rating',
+      serializers.serialize(object.rating,
+          specifiedType: const FullType(Rating)),
+    ];
+    Object? value;
+    value = object.artist;
+    if (value != null) {
+      result
+        ..add('artist')
+        ..add(serializers.serialize(value,
+            specifiedType: const FullType(String)));
+    }
+    value = object.id;
+    if (value != null) {
+      result
+        ..add('id')
+        ..add(serializers.serialize(value,
+            specifiedType: const FullType(String)));
+    }
+    value = object.link;
+    if (value != null) {
+      result
+        ..add('link')
+        ..add(serializers.serialize(value,
+            specifiedType: const FullType(String)));
+    }
+    value = object.started;
+    if (value != null) {
+      result
+        ..add('started')
+        ..add(serializers.serialize(value,
+            specifiedType: const FullType(String)));
+    }
+    value = object.completed;
+    if (value != null) {
+      result
+        ..add('completed')
+        ..add(serializers.serialize(value,
+            specifiedType: const FullType(String)));
+    }
+    value = object.recommender;
+    if (value != null) {
+      result
+        ..add('recommender')
+        ..add(serializers.serialize(value,
+            specifiedType: const FullType(String)));
+    }
+    return result;
+  }
+
+  @override
+  Hear deserialize(Serializers serializers, Iterable<Object?> serialized,
+      {FullType specifiedType = FullType.unspecified}) {
+    final result = new HearBuilder();
+
+    final iterator = serialized.iterator;
+    while (iterator.moveNext()) {
+      final key = iterator.current! as String;
+      iterator.moveNext();
+      final Object? value = iterator.current;
+      switch (key) {
+        case 'title':
+          result.title = serializers.deserialize(value,
+              specifiedType: const FullType(String))! as String;
+          break;
+        case 'artist':
+          result.artist = serializers.deserialize(value,
+              specifiedType: const FullType(String)) as String?;
+          break;
+        case 'type':
+          result.type = serializers.deserialize(value,
+              specifiedType: const FullType(HearType))! as HearType;
+          break;
+        case 'id':
+          result.id = serializers.deserialize(value,
+              specifiedType: const FullType(String)) as String?;
+          break;
+        case 'created':
+          result.created = serializers.deserialize(value,
+              specifiedType: const FullType(Timestamp))! as Timestamp;
+          break;
+        case 'tags':
+          result.tags.replace(serializers.deserialize(value,
+                  specifiedType: const FullType(
+                      BuiltList, const [const FullType(String)]))!
+              as BuiltList<Object?>);
+          break;
+        case 'link':
+          result.link = serializers.deserialize(value,
+              specifiedType: const FullType(String)) as String?;
+          break;
+        case 'started':
+          result.started = serializers.deserialize(value,
               specifiedType: const FullType(String)) as String?;
           break;
         case 'completed':
@@ -173,10 +475,24 @@ class _$BuildSerializer implements StructuredSerializer<Build> {
               const FullType(BuiltList, const [const FullType(String)])),
     ];
     Object? value;
+    value = object.id;
+    if (value != null) {
+      result
+        ..add('id')
+        ..add(serializers.serialize(value,
+            specifiedType: const FullType(String)));
+    }
     value = object.link;
     if (value != null) {
       result
         ..add('link')
+        ..add(serializers.serialize(value,
+            specifiedType: const FullType(String)));
+    }
+    value = object.started;
+    if (value != null) {
+      result
+        ..add('started')
         ..add(serializers.serialize(value,
             specifiedType: const FullType(String)));
     }
@@ -205,6 +521,10 @@ class _$BuildSerializer implements StructuredSerializer<Build> {
           result.text = serializers.deserialize(value,
               specifiedType: const FullType(String))! as String;
           break;
+        case 'id':
+          result.id = serializers.deserialize(value,
+              specifiedType: const FullType(String)) as String?;
+          break;
         case 'created':
           result.created = serializers.deserialize(value,
               specifiedType: const FullType(Timestamp))! as Timestamp;
@@ -217,6 +537,10 @@ class _$BuildSerializer implements StructuredSerializer<Build> {
           break;
         case 'link':
           result.link = serializers.deserialize(value,
+              specifiedType: const FullType(String)) as String?;
+          break;
+        case 'started':
+          result.started = serializers.deserialize(value,
               specifiedType: const FullType(String)) as String?;
           break;
         case 'completed':
@@ -238,15 +562,17 @@ class _$Read extends Read {
   @override
   final ReadType type;
   @override
-  final String? started;
-  @override
   final bool abandoned;
+  @override
+  final String? id;
   @override
   final Timestamp created;
   @override
   final BuiltList<String> tags;
   @override
   final String? link;
+  @override
+  final String? started;
   @override
   final String? completed;
   @override
@@ -261,11 +587,12 @@ class _$Read extends Read {
       {required this.title,
       this.author,
       required this.type,
-      this.started,
       required this.abandoned,
+      this.id,
       required this.created,
       required this.tags,
       this.link,
+      this.started,
       this.completed,
       required this.rating,
       this.recommender})
@@ -292,11 +619,12 @@ class _$Read extends Read {
         title == other.title &&
         author == other.author &&
         type == other.type &&
-        started == other.started &&
         abandoned == other.abandoned &&
+        id == other.id &&
         created == other.created &&
         tags == other.tags &&
         link == other.link &&
+        started == other.started &&
         completed == other.completed &&
         rating == other.rating &&
         recommender == other.recommender;
@@ -308,11 +636,12 @@ class _$Read extends Read {
     _$hash = $jc(_$hash, title.hashCode);
     _$hash = $jc(_$hash, author.hashCode);
     _$hash = $jc(_$hash, type.hashCode);
-    _$hash = $jc(_$hash, started.hashCode);
     _$hash = $jc(_$hash, abandoned.hashCode);
+    _$hash = $jc(_$hash, id.hashCode);
     _$hash = $jc(_$hash, created.hashCode);
     _$hash = $jc(_$hash, tags.hashCode);
     _$hash = $jc(_$hash, link.hashCode);
+    _$hash = $jc(_$hash, started.hashCode);
     _$hash = $jc(_$hash, completed.hashCode);
     _$hash = $jc(_$hash, rating.hashCode);
     _$hash = $jc(_$hash, recommender.hashCode);
@@ -326,11 +655,12 @@ class _$Read extends Read {
           ..add('title', title)
           ..add('author', author)
           ..add('type', type)
-          ..add('started', started)
           ..add('abandoned', abandoned)
+          ..add('id', id)
           ..add('created', created)
           ..add('tags', tags)
           ..add('link', link)
+          ..add('started', started)
           ..add('completed', completed)
           ..add('rating', rating)
           ..add('recommender', recommender))
@@ -378,18 +708,6 @@ class _$ReadBuilder extends ReadBuilder {
   }
 
   @override
-  String? get started {
-    _$this;
-    return super.started;
-  }
-
-  @override
-  set started(String? started) {
-    _$this;
-    super.started = started;
-  }
-
-  @override
   bool get abandoned {
     _$this;
     return super.abandoned;
@@ -399,6 +717,18 @@ class _$ReadBuilder extends ReadBuilder {
   set abandoned(bool abandoned) {
     _$this;
     super.abandoned = abandoned;
+  }
+
+  @override
+  String? get id {
+    _$this;
+    return super.id;
+  }
+
+  @override
+  set id(String? id) {
+    _$this;
+    super.id = id;
   }
 
   @override
@@ -435,6 +765,18 @@ class _$ReadBuilder extends ReadBuilder {
   set link(String? link) {
     _$this;
     super.link = link;
+  }
+
+  @override
+  String? get started {
+    _$this;
+    return super.started;
+  }
+
+  @override
+  set started(String? started) {
+    _$this;
+    super.started = started;
   }
 
   @override
@@ -481,11 +823,12 @@ class _$ReadBuilder extends ReadBuilder {
       super.title = $v.title;
       super.author = $v.author;
       super.type = $v.type;
-      super.started = $v.started;
       super.abandoned = $v.abandoned;
+      super.id = $v.id;
       super.created = $v.created;
       super.tags = $v.tags.toBuilder();
       super.link = $v.link;
+      super.started = $v.started;
       super.completed = $v.completed;
       super.rating = $v.rating;
       super.recommender = $v.recommender;
@@ -518,13 +861,14 @@ class _$ReadBuilder extends ReadBuilder {
               author: author,
               type:
                   BuiltValueNullFieldError.checkNotNull(type, r'Read', 'type'),
-              started: started,
               abandoned: BuiltValueNullFieldError.checkNotNull(
                   abandoned, r'Read', 'abandoned'),
+              id: id,
               created: BuiltValueNullFieldError.checkNotNull(
                   created, r'Read', 'created'),
               tags: tags.build(),
               link: link,
+              started: started,
               completed: completed,
               rating: BuiltValueNullFieldError.checkNotNull(
                   rating, r'Read', 'rating'),
@@ -545,15 +889,667 @@ class _$ReadBuilder extends ReadBuilder {
   }
 }
 
-class _$Build extends Build {
+class _$Watch extends Watch {
   @override
-  final String text;
+  final String title;
+  @override
+  final String? director;
+  @override
+  final WatchType type;
+  @override
+  final bool abandoned;
+  @override
+  final String? id;
   @override
   final Timestamp created;
   @override
   final BuiltList<String> tags;
   @override
   final String? link;
+  @override
+  final String? started;
+  @override
+  final String? completed;
+  @override
+  final Rating rating;
+  @override
+  final String? recommender;
+
+  factory _$Watch([void Function(WatchBuilder)? updates]) =>
+      (new WatchBuilder()..update(updates)).build() as _$Watch;
+
+  _$Watch._(
+      {required this.title,
+      this.director,
+      required this.type,
+      required this.abandoned,
+      this.id,
+      required this.created,
+      required this.tags,
+      this.link,
+      this.started,
+      this.completed,
+      required this.rating,
+      this.recommender})
+      : super._() {
+    BuiltValueNullFieldError.checkNotNull(title, r'Watch', 'title');
+    BuiltValueNullFieldError.checkNotNull(type, r'Watch', 'type');
+    BuiltValueNullFieldError.checkNotNull(abandoned, r'Watch', 'abandoned');
+    BuiltValueNullFieldError.checkNotNull(created, r'Watch', 'created');
+    BuiltValueNullFieldError.checkNotNull(tags, r'Watch', 'tags');
+    BuiltValueNullFieldError.checkNotNull(rating, r'Watch', 'rating');
+  }
+
+  @override
+  Watch rebuild(void Function(WatchBuilder) updates) =>
+      (toBuilder()..update(updates)).build();
+
+  @override
+  _$WatchBuilder toBuilder() => new _$WatchBuilder()..replace(this);
+
+  @override
+  bool operator ==(Object other) {
+    if (identical(other, this)) return true;
+    return other is Watch &&
+        title == other.title &&
+        director == other.director &&
+        type == other.type &&
+        abandoned == other.abandoned &&
+        id == other.id &&
+        created == other.created &&
+        tags == other.tags &&
+        link == other.link &&
+        started == other.started &&
+        completed == other.completed &&
+        rating == other.rating &&
+        recommender == other.recommender;
+  }
+
+  @override
+  int get hashCode {
+    var _$hash = 0;
+    _$hash = $jc(_$hash, title.hashCode);
+    _$hash = $jc(_$hash, director.hashCode);
+    _$hash = $jc(_$hash, type.hashCode);
+    _$hash = $jc(_$hash, abandoned.hashCode);
+    _$hash = $jc(_$hash, id.hashCode);
+    _$hash = $jc(_$hash, created.hashCode);
+    _$hash = $jc(_$hash, tags.hashCode);
+    _$hash = $jc(_$hash, link.hashCode);
+    _$hash = $jc(_$hash, started.hashCode);
+    _$hash = $jc(_$hash, completed.hashCode);
+    _$hash = $jc(_$hash, rating.hashCode);
+    _$hash = $jc(_$hash, recommender.hashCode);
+    _$hash = $jf(_$hash);
+    return _$hash;
+  }
+
+  @override
+  String toString() {
+    return (newBuiltValueToStringHelper(r'Watch')
+          ..add('title', title)
+          ..add('director', director)
+          ..add('type', type)
+          ..add('abandoned', abandoned)
+          ..add('id', id)
+          ..add('created', created)
+          ..add('tags', tags)
+          ..add('link', link)
+          ..add('started', started)
+          ..add('completed', completed)
+          ..add('rating', rating)
+          ..add('recommender', recommender))
+        .toString();
+  }
+}
+
+class _$WatchBuilder extends WatchBuilder {
+  _$Watch? _$v;
+
+  @override
+  String? get title {
+    _$this;
+    return super.title;
+  }
+
+  @override
+  set title(String? title) {
+    _$this;
+    super.title = title;
+  }
+
+  @override
+  String? get director {
+    _$this;
+    return super.director;
+  }
+
+  @override
+  set director(String? director) {
+    _$this;
+    super.director = director;
+  }
+
+  @override
+  WatchType get type {
+    _$this;
+    return super.type;
+  }
+
+  @override
+  set type(WatchType type) {
+    _$this;
+    super.type = type;
+  }
+
+  @override
+  bool get abandoned {
+    _$this;
+    return super.abandoned;
+  }
+
+  @override
+  set abandoned(bool abandoned) {
+    _$this;
+    super.abandoned = abandoned;
+  }
+
+  @override
+  String? get id {
+    _$this;
+    return super.id;
+  }
+
+  @override
+  set id(String? id) {
+    _$this;
+    super.id = id;
+  }
+
+  @override
+  Timestamp? get created {
+    _$this;
+    return super.created;
+  }
+
+  @override
+  set created(Timestamp? created) {
+    _$this;
+    super.created = created;
+  }
+
+  @override
+  ListBuilder<String> get tags {
+    _$this;
+    return super.tags;
+  }
+
+  @override
+  set tags(ListBuilder<String> tags) {
+    _$this;
+    super.tags = tags;
+  }
+
+  @override
+  String? get link {
+    _$this;
+    return super.link;
+  }
+
+  @override
+  set link(String? link) {
+    _$this;
+    super.link = link;
+  }
+
+  @override
+  String? get started {
+    _$this;
+    return super.started;
+  }
+
+  @override
+  set started(String? started) {
+    _$this;
+    super.started = started;
+  }
+
+  @override
+  String? get completed {
+    _$this;
+    return super.completed;
+  }
+
+  @override
+  set completed(String? completed) {
+    _$this;
+    super.completed = completed;
+  }
+
+  @override
+  Rating get rating {
+    _$this;
+    return super.rating;
+  }
+
+  @override
+  set rating(Rating rating) {
+    _$this;
+    super.rating = rating;
+  }
+
+  @override
+  String? get recommender {
+    _$this;
+    return super.recommender;
+  }
+
+  @override
+  set recommender(String? recommender) {
+    _$this;
+    super.recommender = recommender;
+  }
+
+  _$WatchBuilder() : super._();
+
+  WatchBuilder get _$this {
+    final $v = _$v;
+    if ($v != null) {
+      super.title = $v.title;
+      super.director = $v.director;
+      super.type = $v.type;
+      super.abandoned = $v.abandoned;
+      super.id = $v.id;
+      super.created = $v.created;
+      super.tags = $v.tags.toBuilder();
+      super.link = $v.link;
+      super.started = $v.started;
+      super.completed = $v.completed;
+      super.rating = $v.rating;
+      super.recommender = $v.recommender;
+      _$v = null;
+    }
+    return this;
+  }
+
+  @override
+  void replace(Watch other) {
+    ArgumentError.checkNotNull(other, 'other');
+    _$v = other as _$Watch;
+  }
+
+  @override
+  void update(void Function(WatchBuilder)? updates) {
+    if (updates != null) updates(this);
+  }
+
+  @override
+  Watch build() => _build();
+
+  _$Watch _build() {
+    _$Watch _$result;
+    try {
+      _$result = _$v ??
+          new _$Watch._(
+              title: BuiltValueNullFieldError.checkNotNull(
+                  title, r'Watch', 'title'),
+              director: director,
+              type:
+                  BuiltValueNullFieldError.checkNotNull(type, r'Watch', 'type'),
+              abandoned: BuiltValueNullFieldError.checkNotNull(
+                  abandoned, r'Watch', 'abandoned'),
+              id: id,
+              created: BuiltValueNullFieldError.checkNotNull(
+                  created, r'Watch', 'created'),
+              tags: tags.build(),
+              link: link,
+              started: started,
+              completed: completed,
+              rating: BuiltValueNullFieldError.checkNotNull(
+                  rating, r'Watch', 'rating'),
+              recommender: recommender);
+    } catch (_) {
+      late String _$failedField;
+      try {
+        _$failedField = 'tags';
+        tags.build();
+      } catch (e) {
+        throw new BuiltValueNestedFieldError(
+            r'Watch', _$failedField, e.toString());
+      }
+      rethrow;
+    }
+    replace(_$result);
+    return _$result;
+  }
+}
+
+class _$Hear extends Hear {
+  @override
+  final String title;
+  @override
+  final String? artist;
+  @override
+  final HearType type;
+  @override
+  final String? id;
+  @override
+  final Timestamp created;
+  @override
+  final BuiltList<String> tags;
+  @override
+  final String? link;
+  @override
+  final String? started;
+  @override
+  final String? completed;
+  @override
+  final Rating rating;
+  @override
+  final String? recommender;
+
+  factory _$Hear([void Function(HearBuilder)? updates]) =>
+      (new HearBuilder()..update(updates)).build() as _$Hear;
+
+  _$Hear._(
+      {required this.title,
+      this.artist,
+      required this.type,
+      this.id,
+      required this.created,
+      required this.tags,
+      this.link,
+      this.started,
+      this.completed,
+      required this.rating,
+      this.recommender})
+      : super._() {
+    BuiltValueNullFieldError.checkNotNull(title, r'Hear', 'title');
+    BuiltValueNullFieldError.checkNotNull(type, r'Hear', 'type');
+    BuiltValueNullFieldError.checkNotNull(created, r'Hear', 'created');
+    BuiltValueNullFieldError.checkNotNull(tags, r'Hear', 'tags');
+    BuiltValueNullFieldError.checkNotNull(rating, r'Hear', 'rating');
+  }
+
+  @override
+  Hear rebuild(void Function(HearBuilder) updates) =>
+      (toBuilder()..update(updates)).build();
+
+  @override
+  _$HearBuilder toBuilder() => new _$HearBuilder()..replace(this);
+
+  @override
+  bool operator ==(Object other) {
+    if (identical(other, this)) return true;
+    return other is Hear &&
+        title == other.title &&
+        artist == other.artist &&
+        type == other.type &&
+        id == other.id &&
+        created == other.created &&
+        tags == other.tags &&
+        link == other.link &&
+        started == other.started &&
+        completed == other.completed &&
+        rating == other.rating &&
+        recommender == other.recommender;
+  }
+
+  @override
+  int get hashCode {
+    var _$hash = 0;
+    _$hash = $jc(_$hash, title.hashCode);
+    _$hash = $jc(_$hash, artist.hashCode);
+    _$hash = $jc(_$hash, type.hashCode);
+    _$hash = $jc(_$hash, id.hashCode);
+    _$hash = $jc(_$hash, created.hashCode);
+    _$hash = $jc(_$hash, tags.hashCode);
+    _$hash = $jc(_$hash, link.hashCode);
+    _$hash = $jc(_$hash, started.hashCode);
+    _$hash = $jc(_$hash, completed.hashCode);
+    _$hash = $jc(_$hash, rating.hashCode);
+    _$hash = $jc(_$hash, recommender.hashCode);
+    _$hash = $jf(_$hash);
+    return _$hash;
+  }
+
+  @override
+  String toString() {
+    return (newBuiltValueToStringHelper(r'Hear')
+          ..add('title', title)
+          ..add('artist', artist)
+          ..add('type', type)
+          ..add('id', id)
+          ..add('created', created)
+          ..add('tags', tags)
+          ..add('link', link)
+          ..add('started', started)
+          ..add('completed', completed)
+          ..add('rating', rating)
+          ..add('recommender', recommender))
+        .toString();
+  }
+}
+
+class _$HearBuilder extends HearBuilder {
+  _$Hear? _$v;
+
+  @override
+  String? get title {
+    _$this;
+    return super.title;
+  }
+
+  @override
+  set title(String? title) {
+    _$this;
+    super.title = title;
+  }
+
+  @override
+  String? get artist {
+    _$this;
+    return super.artist;
+  }
+
+  @override
+  set artist(String? artist) {
+    _$this;
+    super.artist = artist;
+  }
+
+  @override
+  HearType get type {
+    _$this;
+    return super.type;
+  }
+
+  @override
+  set type(HearType type) {
+    _$this;
+    super.type = type;
+  }
+
+  @override
+  String? get id {
+    _$this;
+    return super.id;
+  }
+
+  @override
+  set id(String? id) {
+    _$this;
+    super.id = id;
+  }
+
+  @override
+  Timestamp? get created {
+    _$this;
+    return super.created;
+  }
+
+  @override
+  set created(Timestamp? created) {
+    _$this;
+    super.created = created;
+  }
+
+  @override
+  ListBuilder<String> get tags {
+    _$this;
+    return super.tags;
+  }
+
+  @override
+  set tags(ListBuilder<String> tags) {
+    _$this;
+    super.tags = tags;
+  }
+
+  @override
+  String? get link {
+    _$this;
+    return super.link;
+  }
+
+  @override
+  set link(String? link) {
+    _$this;
+    super.link = link;
+  }
+
+  @override
+  String? get started {
+    _$this;
+    return super.started;
+  }
+
+  @override
+  set started(String? started) {
+    _$this;
+    super.started = started;
+  }
+
+  @override
+  String? get completed {
+    _$this;
+    return super.completed;
+  }
+
+  @override
+  set completed(String? completed) {
+    _$this;
+    super.completed = completed;
+  }
+
+  @override
+  Rating get rating {
+    _$this;
+    return super.rating;
+  }
+
+  @override
+  set rating(Rating rating) {
+    _$this;
+    super.rating = rating;
+  }
+
+  @override
+  String? get recommender {
+    _$this;
+    return super.recommender;
+  }
+
+  @override
+  set recommender(String? recommender) {
+    _$this;
+    super.recommender = recommender;
+  }
+
+  _$HearBuilder() : super._();
+
+  HearBuilder get _$this {
+    final $v = _$v;
+    if ($v != null) {
+      super.title = $v.title;
+      super.artist = $v.artist;
+      super.type = $v.type;
+      super.id = $v.id;
+      super.created = $v.created;
+      super.tags = $v.tags.toBuilder();
+      super.link = $v.link;
+      super.started = $v.started;
+      super.completed = $v.completed;
+      super.rating = $v.rating;
+      super.recommender = $v.recommender;
+      _$v = null;
+    }
+    return this;
+  }
+
+  @override
+  void replace(Hear other) {
+    ArgumentError.checkNotNull(other, 'other');
+    _$v = other as _$Hear;
+  }
+
+  @override
+  void update(void Function(HearBuilder)? updates) {
+    if (updates != null) updates(this);
+  }
+
+  @override
+  Hear build() => _build();
+
+  _$Hear _build() {
+    _$Hear _$result;
+    try {
+      _$result = _$v ??
+          new _$Hear._(
+              title: BuiltValueNullFieldError.checkNotNull(
+                  title, r'Hear', 'title'),
+              artist: artist,
+              type:
+                  BuiltValueNullFieldError.checkNotNull(type, r'Hear', 'type'),
+              id: id,
+              created: BuiltValueNullFieldError.checkNotNull(
+                  created, r'Hear', 'created'),
+              tags: tags.build(),
+              link: link,
+              started: started,
+              completed: completed,
+              rating: BuiltValueNullFieldError.checkNotNull(
+                  rating, r'Hear', 'rating'),
+              recommender: recommender);
+    } catch (_) {
+      late String _$failedField;
+      try {
+        _$failedField = 'tags';
+        tags.build();
+      } catch (e) {
+        throw new BuiltValueNestedFieldError(
+            r'Hear', _$failedField, e.toString());
+      }
+      rethrow;
+    }
+    replace(_$result);
+    return _$result;
+  }
+}
+
+class _$Build extends Build {
+  @override
+  final String text;
+  @override
+  final String? id;
+  @override
+  final Timestamp created;
+  @override
+  final BuiltList<String> tags;
+  @override
+  final String? link;
+  @override
+  final String? started;
   @override
   final String? completed;
 
@@ -562,9 +1558,11 @@ class _$Build extends Build {
 
   _$Build._(
       {required this.text,
+      this.id,
       required this.created,
       required this.tags,
       this.link,
+      this.started,
       this.completed})
       : super._() {
     BuiltValueNullFieldError.checkNotNull(text, r'Build', 'text');
@@ -584,9 +1582,11 @@ class _$Build extends Build {
     if (identical(other, this)) return true;
     return other is Build &&
         text == other.text &&
+        id == other.id &&
         created == other.created &&
         tags == other.tags &&
         link == other.link &&
+        started == other.started &&
         completed == other.completed;
   }
 
@@ -594,9 +1594,11 @@ class _$Build extends Build {
   int get hashCode {
     var _$hash = 0;
     _$hash = $jc(_$hash, text.hashCode);
+    _$hash = $jc(_$hash, id.hashCode);
     _$hash = $jc(_$hash, created.hashCode);
     _$hash = $jc(_$hash, tags.hashCode);
     _$hash = $jc(_$hash, link.hashCode);
+    _$hash = $jc(_$hash, started.hashCode);
     _$hash = $jc(_$hash, completed.hashCode);
     _$hash = $jf(_$hash);
     return _$hash;
@@ -606,9 +1608,11 @@ class _$Build extends Build {
   String toString() {
     return (newBuiltValueToStringHelper(r'Build')
           ..add('text', text)
+          ..add('id', id)
           ..add('created', created)
           ..add('tags', tags)
           ..add('link', link)
+          ..add('started', started)
           ..add('completed', completed))
         .toString();
   }
@@ -620,6 +1624,10 @@ class BuildBuilder implements Builder<Build, BuildBuilder> {
   String? _text;
   String? get text => _$this._text;
   set text(String? text) => _$this._text = text;
+
+  String? _id;
+  String? get id => _$this._id;
+  set id(String? id) => _$this._id = id;
 
   Timestamp? _created;
   Timestamp? get created => _$this._created;
@@ -633,6 +1641,10 @@ class BuildBuilder implements Builder<Build, BuildBuilder> {
   String? get link => _$this._link;
   set link(String? link) => _$this._link = link;
 
+  String? _started;
+  String? get started => _$this._started;
+  set started(String? started) => _$this._started = started;
+
   String? _completed;
   String? get completed => _$this._completed;
   set completed(String? completed) => _$this._completed = completed;
@@ -643,9 +1655,11 @@ class BuildBuilder implements Builder<Build, BuildBuilder> {
     final $v = _$v;
     if ($v != null) {
       _text = $v.text;
+      _id = $v.id;
       _created = $v.created;
       _tags = $v.tags.toBuilder();
       _link = $v.link;
+      _started = $v.started;
       _completed = $v.completed;
       _$v = null;
     }
@@ -673,10 +1687,12 @@ class BuildBuilder implements Builder<Build, BuildBuilder> {
           new _$Build._(
               text:
                   BuiltValueNullFieldError.checkNotNull(text, r'Build', 'text'),
+              id: id,
               created: BuiltValueNullFieldError.checkNotNull(
                   created, r'Build', 'created'),
               tags: tags.build(),
               link: link,
+              started: started,
               completed: completed);
     } catch (_) {
       late String _$failedField;

@@ -8,6 +8,8 @@ import 'model.dart';
 import 'store.dart';
 import 'ui.dart';
 import 'toread.dart';
+import 'towatch.dart';
+import 'tohear.dart';
 
 void main () async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -59,8 +61,8 @@ class InOutAppState extends State<InOutApp> {
     final home = user == null ? const AuthPage() : switch (page.page) {
       ItemType.journal => const TempPage(what: "Journal"),
       ItemType.read  => const ToReadPage(),
-      ItemType.watch => const TempPage(what: "Watch"),
-      ItemType.hear  => const TempPage(what: "Hear"),
+      ItemType.watch => const ToWatchPage(),
+      ItemType.hear  => const ToHearPage(),
       ItemType.play  => const TempPage(what: "Play"),
       ItemType.dine  => const TempPage(what: "Dine"),
       ItemType.build => const TempPage(what: "Build"),
