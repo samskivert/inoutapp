@@ -28,7 +28,7 @@ class WatchItem extends StatelessWidget {
   WatchItem ({required this.item}) : super(key: Key(item.id!));
   final Watch item;
 
-  @override Widget build (BuildContext context) => consumeRow(
+  @override Widget build (BuildContext context) => itemRow(
     context, item, item.title, item.director, iconFor(item.type), item.abandoned, false,
     () => updateWatch(context, item, (b) => b..started = dateFmt.format(DateTime.now())),
     () => updateWatch(context, item, (b) => b..completed = dateFmt.format(DateTime.now())),
@@ -45,12 +45,12 @@ IconData iconFor (WatchType type) {
   }
 }
 
-class EditWatchItem extends EditConsume<Watch> {
+class EditWatchItem extends EditItem<Watch> {
   const EditWatchItem ({super.key, required super.item});
   @override EditWatchItemState createState () => EditWatchItemState();
 }
 
-class EditWatchItemState extends EditConsumeState<EditWatchItem, Watch, WatchType> {
+class EditWatchItemState extends EditItemState<EditWatchItem, Watch, WatchType> {
   @override String main (Watch item) => item.title;
   @override Watch setMain (Watch item, String main) => item.rebuild((b) => b..title = main);
   @override bool hasAux () => true;

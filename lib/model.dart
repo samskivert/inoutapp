@@ -186,8 +186,8 @@ abstract class Build implements Item, Built<Build, BuildBuilder> {
   Build._();
 
   @override bool isProtracted () => true;
-  @override bool startable () => false; // TODO
-  @override bool filter (Filter filter) => filter(text);
+  @override bool startable () => started != null;
+  @override bool filter (Filter filter) => filter(text) || filter(link) || tags.any(filter);
 }
 
 // in order to provide a defaults value for enums we need this custom builder, yay!

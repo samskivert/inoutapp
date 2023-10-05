@@ -140,6 +140,28 @@ class Store {
     }).whereType<Dine>();
   }
 
+  // Build
+
+  Stream<(List<Build> active, List<Build> unbuild, List<Build> recent)> buildItems (int recent) =>
+    _items('build', _decodeBuild, recent);
+  Stream<Iterable<Build>> buildHistory () =>
+    _collection('build').where('completed', isNull: false).snapshots().map(_decodeBuild);
+
+  Future<void> createBuild (String text) => recreateBuild(Build(
+    (b) => b..text = text
+            ..created = Timestamp.now()));
+  Future<void> recreateBuild (Build item) => _recreate('build', Build.serializer, item);
+  Future<void> updateBuild (Build orig, Build updated) =>
+    _collection('build').doc(orig.id).update(_itemDelta(Build.serializer, orig, updated));
+  Future<void> deleteBuild (Build item) => _collection('build').doc(item.id).delete();
+
+  Iterable<Build> _decodeBuild (QuerySnapshot<Map<String, dynamic>> snap) {
+    return snap.docs.map((dd) {
+      var item = serializers.deserializeWith<Build>(Build.serializer, dd.data());
+      return item?.rebuild((bb) => bb..id = dd.id);
+    }).whereType<Build>();
+  }
+
   // Generic bits
 
   CollectionReference<Map<String, dynamic>> _collection (String name) {

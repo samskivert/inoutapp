@@ -28,7 +28,7 @@ class DineItem extends StatelessWidget {
   DineItem ({required this.item}) : super(key: Key(item.id!));
   final Dine item;
 
-  @override Widget build (BuildContext context) => consumeRow(
+  @override Widget build (BuildContext context) => itemRow(
     context, item, item.name, item.location, iconFor(item.type), false, false,
     () => updateDine(context, item, (b) => b..started = dateFmt.format(DateTime.now())),
     () => updateDine(context, item, (b) => b..completed = dateFmt.format(DateTime.now())),
@@ -44,12 +44,12 @@ IconData iconFor (DineType type) {
   }
 }
 
-class EditDineItem extends EditConsume<Dine> {
+class EditDineItem extends EditItem<Dine> {
   const EditDineItem ({super.key, required super.item});
   @override EditDineItemState createState () => EditDineItemState();
 }
 
-class EditDineItemState extends EditConsumeState<EditDineItem, Dine, DineType> {
+class EditDineItemState extends EditItemState<EditDineItem, Dine, DineType> {
   @override String mainName () => 'Name';
   @override String main (Dine item) => item.name;
   @override Dine setMain (Dine item, String main) => item.rebuild((b) => b..name = main);

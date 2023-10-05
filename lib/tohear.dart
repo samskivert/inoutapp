@@ -28,7 +28,7 @@ class HearItem extends StatelessWidget {
   HearItem ({required this.item}) : super(key: Key(item.id!));
   final Hear item;
 
-  @override Widget build (BuildContext context) => consumeRow(
+  @override Widget build (BuildContext context) => itemRow(
     context, item, item.title, item.artist, iconFor(item.type), false, false,
     () => updateHear(context, item, (b) => b..started = dateFmt.format(DateTime.now())),
     () => updateHear(context, item, (b) => b..completed = dateFmt.format(DateTime.now())),
@@ -45,12 +45,12 @@ IconData iconFor (HearType type) {
   }
 }
 
-class EditHearItem extends EditConsume<Hear> {
+class EditHearItem extends EditItem<Hear> {
   const EditHearItem ({super.key, required super.item});
   @override EditHearItemState createState () => EditHearItemState();
 }
 
-class EditHearItemState extends EditConsumeState<EditHearItem, Hear, HearType> {
+class EditHearItemState extends EditItemState<EditHearItem, Hear, HearType> {
   @override String main (Hear item) => item.title;
   @override Hear setMain (Hear item, String main) => item.rebuild((b) => b..title = main);
   @override bool hasAux () => true;

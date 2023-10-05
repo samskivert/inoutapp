@@ -213,8 +213,8 @@ List<Widget> itemFooter (
   ];
 }
 
-Widget consumeRow (
-  BuildContext ctx, Consume item, String title, String? subtitle, IconData? icon,
+Widget itemRow (
+  BuildContext ctx, Item item, String title, String? subtitle, IconData? icon,
   bool abandoned, bool finished,
   void Function() onStart, void Function() onComplete, void Function() onUncomplete,
   Widget Function(BuildContext) onEdit
@@ -223,7 +223,8 @@ Widget consumeRow (
     item.completed != null ? ('Revert to uncompleted', Icons.check_box, onUncomplete) :
     item.startable() ? ('Mark as started', Icons.play_arrow, onStart) :
     ('Mark as completed', Icons.check_box_outline_blank, onComplete);
-  var emoji = abandoned ? '😴' : item.rating != Rating.none ? item.rating.emoji : null;
+  var rating = item is Consume ? item.rating : Rating.none;
+  var emoji = abandoned ? '😴' : rating != Rating.none ? rating.emoji : null;
   var items = <Widget>[
     IconButton(icon: Icon(actionIcon), tooltip: actionTip, onPressed: action),
     Column(
@@ -310,12 +311,12 @@ Widget textFieldDate (BuildContext ctx, String? value, String label, Function(St
     ]);
 }
 
-abstract class EditConsume<I extends Consume> extends StatefulWidget {
-  const EditConsume ({super.key, required this.item});
+abstract class EditItem<I extends Item> extends StatefulWidget {
+  const EditItem ({super.key, required this.item});
   final I item;
 }
 
-abstract class EditConsumeState<W extends EditConsume<I>, I extends Consume, T> extends State<W> {
+abstract class EditItemState<W extends EditItem<I>, I extends Item, T> extends State<W> {
   final _formKey = GlobalKey<FormState>();
   late I _item;
 
@@ -328,8 +329,8 @@ abstract class EditConsumeState<W extends EditConsume<I>, I extends Consume, T> 
   I setMain (I item, String main);
   I setTags (I item, List<String> tags);
   I setLink (I item, String? link);
-  I setRecommender (I item, String? recommender);
-  I setRating (I item, Rating rating);
+  I setRecommender (I item, String? recommender) => item; // default to noop
+  I setRating (I item, Rating rating) => item; // default to noop
   I setStarted (I item, String? started);
   I setCompleted (I item, String? completed);
   void update (Store store, I orig, I updated);
@@ -361,13 +362,12 @@ abstract class EditConsumeState<W extends EditConsume<I>, I extends Consume, T> 
     appBar: AppBar(title: const Text('Edit')),
     body: Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-      child: Form(key: _formKey, child: Column(children: <Widget>[
+      child: Form(key: _formKey, child: _mkCol(<Widget>[
         textField(main(_item), mainName(), (text) {
           _item = setMain(_item, text);
         }),
-        const SizedBox(height: 24),
-        Row(children: <Widget>[
-          if (hasType()) Expanded(child: DropdownMenu<T>(
+        _mkRow(<Widget>[
+          if (hasType()) DropdownMenu<T>(
             initialSelection: type(_item),
             label: const Text('Type'),
             dropdownMenuEntries: typeEntries(),
@@ -376,104 +376,113 @@ abstract class EditConsumeState<W extends EditConsume<I>, I extends Consume, T> 
                 if (type is T) _item = setType(_item, type);
               });
             },
-          )),
-          if (hasType()) const SizedBox(width: 32),
-          if (hasAux()) Expanded(child: textField(aux(_item) ?? '', auxName(), (text) {
-            _item = setAux(_item, beNull(text));
-          })),
-          if (hasAux()) const SizedBox(width: 32),
-          Expanded(child: textField2(_item.tags.join(' '), 'Tags', (text) => setState(() {
-            _item = setTags(_item, text.isEmpty ? <String>[] : text.split(' '));
-          }))),
-        ]),
-        const SizedBox(height: 24),
-        Row(children: <Widget>[
-          Expanded(child: textField2(_item.link ?? '', 'Link', (text) => setState(() {
-            _item = setLink(_item, beNull(text));
-          }))),
-          const SizedBox(width: 32),
-          Expanded(child: textField2(_item.recommender ?? '', 'Recommender', (text) => setState(() {
-            _item = setRecommender(_item, beNull(text));
-          }))),
-        ]),
-        const SizedBox(height: 24),
-        ..._miscBits(ctx),
-        const SizedBox(height: 24),
-        Text('Created: ${createdFmt.format(_item.created.toDate())}'),
-        const SizedBox(height: 24),
-        Row(children: <Widget>[
-          IconButton(
-            icon: const Icon(Icons.delete),
-            tooltip: 'Delete item',
-            onPressed: () {
-              final store = Provider.of<Store>(ctx, listen: false);
-              delete(store, _item);
-              Navigator.pop(ctx);
-              ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-                content: Text('Deleted item: ${main(_item)}'),
-                action: SnackBarAction(
-                  label: 'Undo',
-                  onPressed: () => recreate(store, _item)
-                ),
-              ));
-            },
           ),
-          const Spacer(),
-          OutlinedButton(child: const Text('Cancel'), onPressed: () => Navigator.pop(ctx)),
-          const SizedBox(width: 32),
-          FilledButton(child: const Text('Update'), onPressed: () {
-            update(Provider.of<Store>(ctx, listen: false), widget.item, _item);
-            Navigator.pop(ctx);
+          if (hasAux()) textField(aux(_item) ?? '', auxName(), (text) {
+            _item = setAux(_item, beNull(text));
           }),
+          textField2(_item.tags.join(' '), 'Tags', (text) => setState(() {
+            _item = setTags(_item, text.isEmpty ? <String>[] : text.split(' '));
+          })),
+        ]),
+        _mkRow(<Widget>[
+          textField2(_item.link ?? '', 'Link', (text) => setState(() {
+            _item = setLink(_item, beNull(text));
+          })),
+          if (_item is Consume) textField2(
+            (_item as Consume).recommender ?? '', 'Recommender', (text) => setState(() {
+              _item = setRecommender(_item, beNull(text));
+            })),
+        ]),
+        ..._miscBits(ctx),
+        Text('Created: ${createdFmt.format(_item.created.toDate())}'),
+        Row(children: <Widget>[
+          _deleteButton(ctx),
+          const Spacer(),
+          _cancelButton(ctx),
+          const SizedBox(width: 32),
+          _updateButton(ctx),
         ]),
       ])),
     ),
   );
 
+  Widget _deleteButton (BuildContext ctx) => IconButton(
+    icon: const Icon(Icons.delete), tooltip: 'Delete item', onPressed: () {
+      final store = Provider.of<Store>(ctx, listen: false);
+      delete(store, _item);
+      Navigator.pop(ctx);
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+        content: Text('Deleted item: ${main(_item)}'),
+        action: SnackBarAction(
+          label: 'Undo',
+          onPressed: () => recreate(store, _item)
+        ),
+      ));
+    },
+  );
+
+  Widget _cancelButton (BuildContext ctx) => OutlinedButton(
+    child: const Text('Cancel'), onPressed: () => Navigator.pop(ctx));
+
+  Widget _updateButton (BuildContext ctx) => FilledButton(
+    child: const Text('Update'), onPressed: () {
+      update(Provider.of<Store>(ctx, listen: false), widget.item, _item);
+      Navigator.pop(ctx);
+    });
+
+  Widget _ratingDropdown () => DropdownMenu<Rating>(
+    initialSelection: (_item as Consume).rating,
+    label: const Text('Rating'),
+    dropdownMenuEntries: ratingEntries,
+    onSelected: (Rating? rating) {
+      setState(() {
+        if (rating is Rating) _item = setRating(_item, rating);
+      });
+    },
+  );
+
+  // handles a bunch of hairy conditional layout
   List<Widget> _miscBits (BuildContext ctx) {
-    final completed = textFieldDate(ctx, _item.completed ?? '', 'Completed', (date) => setState(() {
-      _item = setCompleted(_item, date);
-    }));
-    final row = <Widget>[
-      Expanded(child: DropdownMenu<Rating>(
-        initialSelection: _item.rating,
-        label: const Text('Rating'),
-        dropdownMenuEntries: ratingEntries,
-        onSelected: (Rating? rating) {
-          setState(() {
-            if (rating is Rating) _item = setRating(_item, rating);
-          });
-        },
-      )),
-      if (hasAbandoned()) const SizedBox(width: 32),
-      if (hasAbandoned()) Expanded(child: CheckboxListTile(
-        title: const Text('Abandoned'),
-        value: abandoned(_item),
-        onChanged: (selected) {
-          setState(() {
-            if (selected is bool) _item = setAbandoned(_item, selected);
-          });
-        },
-      )),
-      if (hasFinished()) const SizedBox(width: 32),
-      if (hasFinished()) Expanded(child: CheckboxListTile(
-        title: const Text('Saw Credits?'),
-        value: finished(_item),
-        onChanged: (selected) {
-          setState(() {
-            if (selected is bool) _item = setFinished(_item, selected);
-          });
-        },
-      )),
-      if (!_item.isProtracted()) const SizedBox(width: 32),
-      if (!_item.isProtracted()) Expanded(child: completed),
+    final row = [
+      if (_item is Consume) _ratingDropdown(),
+      // only one of these two will apply for a given item type
+      if (hasAbandoned()) _toggleButton('Abandoned', abandoned(_item), setAbandoned),
+      if (hasFinished()) _toggleButton('Saw Credits?', finished(_item), setFinished),
     ];
-    return _item.isProtracted() ? [Row(children: row), Row(children: <Widget>[
-      Expanded(child: textFieldDate(ctx, _item.started ?? '', 'Started', (date) => setState(() {
-        _item = setStarted(_item, date);
-      }))),
-      const SizedBox(width: 32),
-      Expanded(child: completed),
-    ])] : [Row(children: row)];
+    return _item.isProtracted() ?
+      // if we start+finish, put that on a separate row below the above bits (if any)
+      [if (row.isNotEmpty) _mkRow(row), _mkRow([_started(ctx), _completed(ctx)])] :
+      // if we don't start/finihs then just tack finish on to our single row
+      [_mkRow([...row, _completed(ctx)])];
+  }
+
+  Widget _started (BuildContext ctx) => textFieldDate(
+    ctx, _item.started ?? '', 'Started',
+    (date) => setState(() { _item = setStarted(_item, date); }));
+  Widget _completed (BuildContext ctx) => textFieldDate(
+    ctx, _item.completed ?? '', 'Completed',
+    (date) => setState(() { _item = setCompleted(_item, date); }));
+
+  Widget _toggleButton (String label, bool value, I Function(I, bool) onToggle) => CheckboxListTile(
+    title: Text(label), value: value, onChanged: (selected) {
+      setState(() {
+        if (selected is bool) _item = onToggle(_item, selected);
+      });
+    },
+  );
+
+  Row _mkRow (List<Widget> children, {double width = 32}) =>
+    Row(children: _gapped(children, SizedBox(width: width), true));
+  Column _mkCol (List<Widget> children, {double height = 24}) =>
+    Column(children: _gapped(children, SizedBox(height: height), false));
+
+  List<Widget> _gapped (List<Widget> children, Widget gap, bool expand) {
+    final gapped = <Widget>[];
+    var ii = 0;
+    for (final child in children) {
+      if (ii++ > 0) gapped.add(gap);
+      gapped.add(expand ? Expanded(child: child) : child);
+    }
+    return gapped;
   }
 }

@@ -50,7 +50,7 @@ class PlayItem extends StatelessWidget {
   PlayItem ({required this.item}) : super(key: Key(item.id!));
   final Play item;
 
-  @override Widget build (BuildContext context) => consumeRow(
+  @override Widget build (BuildContext context) => itemRow(
     context, item, item.title, playTypeLabels[item.platform], null, false, item.credits,
     () => updatePlay(context, item, (b) => b..started = dateFmt.format(DateTime.now())),
     () => updatePlay(context, item, (b) => b..completed = dateFmt.format(DateTime.now())),
@@ -58,7 +58,7 @@ class PlayItem extends StatelessWidget {
     (_) => EditPlayItem(item: item));
 }
 
-class EditPlayItem extends EditConsume<Play> {
+class EditPlayItem extends EditItem<Play> {
   const EditPlayItem ({super.key, required super.item});
   @override EditPlayItemState createState () => EditPlayItemState();
 }
@@ -66,7 +66,7 @@ class EditPlayItem extends EditConsume<Play> {
 final playTypeEntries = playTypeLabels.entries.map(
   (ee) => DropdownMenuEntry(value: ee.key, label: ee.value)).toList();
 
-class EditPlayItemState extends EditConsumeState<EditPlayItem, Play, String> {
+class EditPlayItemState extends EditItemState<EditPlayItem, Play, String> {
   @override String main (Play item) => item.title;
   @override Play setMain (Play item, String main) => item.rebuild((b) => b..title = main);
   @override List<DropdownMenuEntry<String>> typeEntries () => playTypeEntries;

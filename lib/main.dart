@@ -12,6 +12,7 @@ import 'towatch.dart';
 import 'tohear.dart';
 import 'toplay.dart';
 import 'todine.dart';
+import 'tobuild.dart';
 
 void main () async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -67,7 +68,7 @@ class InOutAppState extends State<InOutApp> {
       ItemType.hear  => const ToHearPage(),
       ItemType.play  => const ToPlayPage(),
       ItemType.dine  => const ToDinePage(),
-      ItemType.build => const TempPage(what: "Build"),
+      ItemType.build => const ToBuildPage(),
     };
     final theme = ThemeData(
         useMaterial3: true,

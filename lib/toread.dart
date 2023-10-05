@@ -28,7 +28,7 @@ class ReadItem extends StatelessWidget {
   ReadItem ({required this.item}) : super(key: Key(item.id!));
   final Read item;
 
-  @override Widget build (BuildContext context) => consumeRow(
+  @override Widget build (BuildContext context) => itemRow(
     context, item, item.title, item.author, iconFor(item.type), item.abandoned, false,
     () => updateRead(context, item, (b) => b..started = dateFmt.format(DateTime.now())),
     () => updateRead(context, item, (b) => b..completed = dateFmt.format(DateTime.now())),
@@ -44,12 +44,12 @@ IconData iconFor (ReadType type) {
   }
 }
 
-class EditReadItem extends EditConsume<Read> {
+class EditReadItem extends EditItem<Read> {
   const EditReadItem ({super.key, required super.item});
   @override EditReadItemState createState () => EditReadItemState();
 }
 
-class EditReadItemState extends EditConsumeState<EditReadItem, Read, ReadType> {
+class EditReadItemState extends EditItemState<EditReadItem, Read, ReadType> {
   @override String main (Read item) => item.title;
   @override Read setMain (Read item, String main) => item.rebuild((b) => b..title = main);
   @override bool hasAux () => true;
