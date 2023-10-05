@@ -219,21 +219,21 @@ Widget itemRow (
   void Function() onStart, void Function() onComplete, void Function() onUncomplete,
   Widget Function(BuildContext) onEdit
 ) {
-  var (actionTip, actionIcon, action) =
+  final (actionTip, actionIcon, action) =
     item.completed != null ? ('Revert to uncompleted', Icons.check_box, onUncomplete) :
     item.startable() ? ('Mark as started', Icons.play_arrow, onStart) :
     ('Mark as completed', Icons.check_box_outline_blank, onComplete);
-  var rating = item is Consume ? item.rating : Rating.none;
-  var emoji = abandoned ? '😴' : rating != Rating.none ? rating.emoji : null;
-  var items = <Widget>[
+  final rating = item is Consume ? item.rating : Rating.none;
+  final emoji = abandoned ? '😴' : rating != Rating.none ? rating.emoji : null;
+  final recommender = item is Consume ? item.recommender : null;
+  final aux = subtitle != null && recommender != null ? '$subtitle (via $recommender)' :
+    recommender != null ? 'via $recommender' : subtitle ?? '';
+  final auxStyle = Theme.of(ctx).textTheme.bodySmall?.merge(TextStyle(color: Colors.grey[600]));
+  return Row(children: <Widget>[
     IconButton(icon: Icon(actionIcon), tooltip: actionTip, onPressed: action),
     Column(
       crossAxisAlignment: CrossAxisAlignment.start,
-      children: <Widget>[
-        Text(title),
-        Text(subtitle ?? '', style: Theme.of(ctx).textTheme.bodySmall?.merge(
-          TextStyle(color: Colors.grey[600]))),
-      ]),
+      children: <Widget>[Text(title), Text(aux, style: auxStyle)]),
     const Spacer(),
     if (item.link != null) IconButton(
       icon: const Icon(Icons.link),
@@ -252,8 +252,7 @@ Widget itemRow (
       onPressed: () => Navigator.push(ctx, MaterialPageRoute(builder: onEdit)),
     ),
     if (icon != null) Icon(icon, color: Colors.grey[600]),
-  ];
-  return Row(children: items);
+  ]);
 }
 
 final ratingEntries = Rating.values.map(
