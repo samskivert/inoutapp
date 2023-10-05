@@ -12,10 +12,10 @@ class ToDinePage extends StatefulWidget {
 class ToDinePageState extends ItemPageState<ToDinePage, Dine> {
   @override ItemType itemType () => ItemType.dine;
   @override Stream<List<Entry<Dine>>> currentItems (Store store) => store.dineItems(5).map(
-    (abc) => entries3('Dining', abc.$1, 'To Dine', abc.$2, 'Recently Dined', abc.$3));
+    (abc) => entries3('Dining', abc.$1, 'To Eat', abc.$2, 'Recently Eaten', abc.$3));
   @override Stream<List<Entry<Dine>>> historyItems (Store store, String filter) =>
     store.dineHistory().map((iis) => annuate(iis, filter));
-  @override String createPlaceholder () => 'Name - Location';
+  @override String createPlaceholder () => 'Name - Location/Cuisine';
   @override String createItem (Store store, String text) => store.create(ItemType.dine, text);
   @override Widget mkItem (Dine item) => DineItem(item: item);
 }
@@ -29,11 +29,19 @@ class DineItem extends StatelessWidget {
   final Dine item;
 
   @override Widget build (BuildContext context) => consumeRow(
-    context, item, item.name, item.location, null, false, false,
+    context, item, item.name, item.location, iconFor(item.type), false, false,
     () => updateDine(context, item, (b) => b..started = dateFmt.format(DateTime.now())),
     () => updateDine(context, item, (b) => b..completed = dateFmt.format(DateTime.now())),
     () => updateDine(context, item, (b) => b..completed = null),
     (_) => EditDineItem(item: item));
+}
+
+IconData iconFor (DineType type) {
+  switch (type) {
+  case DineType.restaurant: return Icons.food_bank_outlined;
+  case DineType.recipe: return Icons.source_outlined;
+  case DineType.other: return Icons.feed_outlined;
+  }
 }
 
 class EditDineItem extends EditConsume<Dine> {
@@ -41,14 +49,19 @@ class EditDineItem extends EditConsume<Dine> {
   @override EditDineItemState createState () => EditDineItemState();
 }
 
-class EditDineItemState extends EditConsumeState<EditDineItem, Dine, String> {
+class EditDineItemState extends EditConsumeState<EditDineItem, Dine, DineType> {
   @override String mainName () => 'Name';
   @override String main (Dine item) => item.name;
   @override Dine setMain (Dine item, String main) => item.rebuild((b) => b..name = main);
   @override bool hasAux () => true;
-  @override String auxName () => 'Location';
+  @override String auxName () => 'Location/Cuisine';
   @override String? aux (Dine item) => item.location;
   @override Dine setAux (Dine item, String? aux) => item.rebuild((b) => b..location = aux);
+  @override List<DropdownMenuEntry<DineType>> typeEntries () => DineType.values.map(
+    (rr) => DropdownMenuEntry<DineType>(value: rr, label: rr.label)).toList();
+  @override bool hasType () => true;
+  @override DineType type (Dine item) => item.type;
+  @override Dine setType (Dine item, DineType type) => item.rebuild((b) => b..type = type);
   @override Dine setTags (Dine item, List<String> tags) =>
     item.rebuild((b) => tags.isEmpty ? b.tags.clear() : b.tags.replace(tags));
   @override Dine setLink (Dine item, String? link) => item.rebuild((b) => b..link = link);

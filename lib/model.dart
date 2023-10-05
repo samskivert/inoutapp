@@ -152,11 +152,21 @@ abstract class Play implements Item, Consume, Built<Play, PlayBuilder> {
   Play._();
 }
 
+enum DineType {
+  restaurant('Restaurant'),
+  recipe('Recipe'),
+  other('Other');
+
+  const DineType (this.label);
+  final String label;
+}
+
 abstract class Dine implements Item, Consume, Built<Dine, DineBuilder> {
   static Serializer<Dine> get serializer => _$dineSerializer;
 
   String get name;
   String? get location;
+  DineType get type;
 
   @override bool isProtracted () => false;
   @override bool startable () => false;
@@ -271,6 +281,7 @@ abstract class DineBuilder implements Builder<Dine, DineBuilder> {
   String? id;
   String? name;
   String? location;
+  DineType type = DineType.restaurant;
   String? started;
 
   factory DineBuilder() = _$DineBuilder;
@@ -350,6 +361,19 @@ class HearTypeSerializer implements PrimitiveSerializer<HearType> {
     HearType.values.byName(serialized as String);
 }
 
+class DineTypeSerializer implements PrimitiveSerializer<DineType> {
+  final bool structured = false;
+  @override final Iterable<Type> types = BuiltList<Type>([DineType]);
+  @override final String wireName = 'DineType';
+  @override
+  Object serialize(Serializers serializers, DineType value,
+                   {FullType specifiedType = FullType.unspecified}) => value.name;
+  @override
+  DineType deserialize(Serializers serializers, Object serialized,
+                       {FullType specifiedType = FullType.unspecified}) =>
+    DineType.values.byName(serialized as String);
+}
+
 @SerializersFor([
   Read,
   Watch,
@@ -364,4 +388,5 @@ final Serializers serializers = (_$serializers.toBuilder()
   ..add(ReadTypeSerializer())
   ..add(WatchTypeSerializer())
   ..add(HearTypeSerializer())
+  ..add(DineTypeSerializer())
   ..addPlugin(StandardJsonPlugin())).build();
