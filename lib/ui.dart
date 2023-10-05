@@ -255,11 +255,8 @@ Widget itemRow (
   ]);
 }
 
-final ratingEntries = Rating.values.map(
-  (rr) => DropdownMenuEntry<Rating>(value: rr, label: rr.emoji + rr.label)).toList();
-
-var dateFmt = DateFormat("yyyy-MM-dd");
-var createdFmt = DateFormat.yMMMd().add_jm();
+final dateFmt = DateFormat("yyyy-MM-dd");
+final createdFmt = DateFormat.yMMMd().add_jm();
 
 String? nonNull (String? txt, String msg) { return txt == null || txt.isEmpty ? msg : null; }
 String? beNull (String txt) => txt.isEmpty ? null : txt;
@@ -309,6 +306,9 @@ Widget textFieldDate (BuildContext ctx, String? value, String label, Function(St
       )
     ]);
 }
+
+final ratingEntries = Rating.values.map(
+  (rr) => DropdownMenuEntry<Rating>(value: rr, label: rr.emoji + rr.label)).toList();
 
 abstract class EditItem<I extends Item> extends StatefulWidget {
   const EditItem ({super.key, required this.item});
