@@ -61,7 +61,7 @@ class InOutAppState extends State<InOutApp> {
   @override Widget build (BuildContext context) {
     final user = _user;
     final page = Provider.of<InOutModel>(context);
-    final home = user == null ? const AuthPage() : switch (page.page) {
+    final home = user == null ? signInScreen() : switch (page.page) {
       ItemType.journal => const TempPage(what: "Journal"),
       ItemType.read  => const ToReadPage(),
       ItemType.watch => const ToWatchPage(),
@@ -87,22 +87,6 @@ class InOutAppState extends State<InOutApp> {
     return user == null ? app : Provider(
       create: (_) => Store(user),
       child: app,
-    );
-  }
-}
-
-class AuthPage extends StatelessWidget {
-  const AuthPage ({super.key});
-
-  @override Widget build (BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: const Text(title)),
-      body: const Center(
-        child: Padding(
-          padding: EdgeInsets.symmetric(horizontal: 8, vertical: 16),
-          child: AuthForm(),
-        ),
-      ),
     );
   }
 }

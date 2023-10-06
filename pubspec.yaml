@@ -21,7 +21,7 @@ dependencies:
   firebase_core: ^2.15.1
   firebase_auth: ^4.9.0
   cloud_firestore: ^4.9.1
-  google_sign_in: ^6.1.4
+  google_sign_in: ^6.1.5
   built_collection: ^5.0.0
   built_value: ^8.6.0
   url_launcher: ^6.1.14
@@ -29,6 +29,8 @@ dependencies:
   intl: ^0.18.1
   rxdart: ^0.27.7
   collection: ^1.17.2
+  firebase_ui_auth: ^1.8.0
+  firebase_ui_oauth_google: ^1.2.11
 
 dev_dependencies:
   flutter_test:

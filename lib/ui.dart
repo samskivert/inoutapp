@@ -307,6 +307,21 @@ Widget textFieldDate (BuildContext ctx, String? value, String label, Function(St
     ]);
 }
 
+Row mkRow (List<Widget> children, {double width = 32}) =>
+  Row(children: _gapped(children, SizedBox(width: width), true));
+Column mkCol (List<Widget> children, {double height = 24}) =>
+  Column(children: _gapped(children, SizedBox(height: height), false));
+
+List<Widget> _gapped (List<Widget> children, Widget gap, bool expand) {
+  final gapped = <Widget>[];
+  var ii = 0;
+  for (final child in children) {
+    if (ii++ > 0) gapped.add(gap);
+    gapped.add(expand ? Expanded(child: child) : child);
+  }
+  return gapped;
+}
+
 final ratingEntries = Rating.values.map(
   (rr) => DropdownMenuEntry<Rating>(value: rr, label: rr.emoji + rr.label)).toList();
 
@@ -361,11 +376,11 @@ abstract class EditItemState<W extends EditItem<I>, I extends Item, T> extends S
     appBar: AppBar(title: const Text('Edit')),
     body: Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-      child: Form(key: _formKey, child: _mkCol(<Widget>[
+      child: Form(key: _formKey, child: mkCol(<Widget>[
         textField(main(_item), mainName(), (text) {
           _item = setMain(_item, text);
         }),
-        _mkRow(<Widget>[
+        mkRow(<Widget>[
           if (hasType()) DropdownMenu<T>(
             initialSelection: type(_item),
             label: const Text('Type'),
@@ -383,7 +398,7 @@ abstract class EditItemState<W extends EditItem<I>, I extends Item, T> extends S
             _item = setTags(_item, text.isEmpty ? <String>[] : text.split(' '));
           })),
         ]),
-        _mkRow(<Widget>[
+        mkRow(<Widget>[
           textField2(_item.link ?? '', 'Link', (text) => setState(() {
             _item = setLink(_item, beNull(text));
           })),
@@ -450,9 +465,9 @@ abstract class EditItemState<W extends EditItem<I>, I extends Item, T> extends S
     ];
     return _item.isProtracted() ?
       // if we start+finish, put that on a separate row below the above bits (if any)
-      [if (row.isNotEmpty) _mkRow(row), _mkRow([_started(ctx), _completed(ctx)])] :
+      [if (row.isNotEmpty) mkRow(row), mkRow([_started(ctx), _completed(ctx)])] :
       // if we don't start/finihs then just tack finish on to our single row
-      [_mkRow([...row, _completed(ctx)])];
+      [mkRow([...row, _completed(ctx)])];
   }
 
   Widget _started (BuildContext ctx) => textFieldDate(
@@ -469,19 +484,4 @@ abstract class EditItemState<W extends EditItem<I>, I extends Item, T> extends S
       });
     },
   );
-
-  Row _mkRow (List<Widget> children, {double width = 32}) =>
-    Row(children: _gapped(children, SizedBox(width: width), true));
-  Column _mkCol (List<Widget> children, {double height = 24}) =>
-    Column(children: _gapped(children, SizedBox(height: height), false));
-
-  List<Widget> _gapped (List<Widget> children, Widget gap, bool expand) {
-    final gapped = <Widget>[];
-    var ii = 0;
-    for (final child in children) {
-      if (ii++ > 0) gapped.add(gap);
-      gapped.add(expand ? Expanded(child: child) : child);
-    }
-    return gapped;
-  }
 }
