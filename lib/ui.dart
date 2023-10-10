@@ -231,10 +231,10 @@ Widget itemRow (
   final auxStyle = Theme.of(ctx).textTheme.bodySmall?.merge(TextStyle(color: Colors.grey[600]));
   return Row(children: <Widget>[
     IconButton(icon: Icon(actionIcon), tooltip: actionTip, onPressed: action),
-    Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: <Widget>[Text(title), Text(aux, style: auxStyle)]),
-    const Spacer(),
+    Expanded(child: Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: <Widget>[Text(title, softWrap: true), Text(aux, style: auxStyle)])),
+    const SizedBox(width: 5),
     if (item.link != null) IconButton(
       icon: const Icon(Icons.link),
       tooltip: item.link,
@@ -380,20 +380,9 @@ abstract class EditItemState<W extends EditItem<I>, I extends Item, T> extends S
         textField(main(_item), mainName(), (text) {
           _item = setMain(_item, text);
         }),
+        if (hasAux()) _auxTextField(),
         mkRow(<Widget>[
-          if (hasType()) DropdownMenu<T>(
-            initialSelection: type(_item),
-            label: const Text('Type'),
-            dropdownMenuEntries: typeEntries(),
-            onSelected: (T? type) {
-              setState(() {
-                if (type is T) _item = setType(_item, type);
-              });
-            },
-          ),
-          if (hasAux()) textField(aux(_item) ?? '', auxName(), (text) {
-            _item = setAux(_item, beNull(text));
-          }),
+          if (hasType()) _typeDropdown(),
           textField2(_item.tags.join(' '), 'Tags', (text) => setState(() {
             _item = setTags(_item, text.isEmpty ? <String>[] : text.split(' '));
           })),
@@ -418,6 +407,21 @@ abstract class EditItemState<W extends EditItem<I>, I extends Item, T> extends S
         ]),
       ])),
     ),
+  );
+
+  Widget _auxTextField () => textField(aux(_item) ?? '', auxName(), (text) {
+    _item = setAux(_item, beNull(text));
+  });
+
+  Widget _typeDropdown () => DropdownMenu<T>(
+    initialSelection: type(_item),
+    label: const Text('Type'),
+    dropdownMenuEntries: typeEntries(),
+    onSelected: (T? type) {
+      setState(() {
+        if (type is T) _item = setType(_item, type);
+      });
+    },
   );
 
   Widget _deleteButton (BuildContext ctx) => IconButton(
@@ -460,7 +464,8 @@ abstract class EditItemState<W extends EditItem<I>, I extends Item, T> extends S
     final row = [
       if (_item is Consume) _ratingDropdown(),
       // only one of these two will apply for a given item type
-      if (hasAbandoned()) _toggleButton('Abandoned', abandoned(_item), setAbandoned),
+      if (hasAbandoned() &&
+          _item.isProtracted()) _toggleButton('Abandoned', abandoned(_item), setAbandoned),
       if (hasFinished()) _toggleButton('Saw Credits?', finished(_item), setFinished),
     ];
     return _item.isProtracted() ?
