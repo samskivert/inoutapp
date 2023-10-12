@@ -217,7 +217,7 @@ Widget itemRow (
   BuildContext ctx, Item item, String title, String? subtitle, IconData? icon,
   bool abandoned, bool finished,
   void Function() onStart, void Function() onComplete, void Function() onUncomplete,
-  Widget Function(BuildContext) onEdit
+  Widget Function(BuildContext) onEdit, {Map<String, void Function()>? longPressMenuItems}
 ) {
   final (actionTip, actionIcon, action) =
     item.completed != null ? ('Revert to uncompleted', Icons.check_box, onUncomplete) :
@@ -229,11 +229,13 @@ Widget itemRow (
   final aux = subtitle != null && recommender != null ? '$subtitle (via $recommender)' :
     recommender != null ? 'via $recommender' : subtitle ?? '';
   final auxStyle = Theme.of(ctx).textTheme.bodySmall?.merge(TextStyle(color: Colors.grey[600]));
+  Widget main = Text(title, softWrap: true);
+  if (longPressMenuItems != null) main = makeLongPress(ctx, main, longPressMenuItems);
   return Row(children: <Widget>[
     IconButton(icon: Icon(actionIcon), tooltip: actionTip, onPressed: action),
     Expanded(child: Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: <Widget>[Text(title, softWrap: true), Text(aux, style: auxStyle)])),
+      children: <Widget>[main, Text(aux, style: auxStyle)])),
     const SizedBox(width: 5),
     if (item.link != null) IconButton(
       icon: const Icon(Icons.link),
@@ -253,6 +255,35 @@ Widget itemRow (
     ),
     if (icon != null) Icon(icon, color: Colors.grey[600]),
   ]);
+}
+
+void googleSearch (String text) => launchQuery('www.google.com', 'search', {'q': text});
+
+void launchQuery (String host, String path, Map<String, String>? queryParams) async {
+  final uri = Uri(scheme: 'https', host: host, path: path, queryParameters: queryParams);
+  if (!await launchUrl(uri)) {
+    print('Failed to launch: ${uri}');
+  }
+}
+
+Widget makeLongPress (BuildContext ctx, Widget widget, Map<String, void Function()> menuItems) {
+  var tapPos = const Offset(0, 0);
+  return GestureDetector(
+    onTapDown: (d) => tapPos = d.globalPosition,
+    onLongPress: () {
+      final overlay = Overlay.of(ctx).context.findRenderObject() as RenderBox;
+      showMenu(
+        context: ctx,
+        items: menuItems.entries.map(
+          (e) => PopupMenuItem(onTap: e.value, child: Text(e.key))).toList(),
+        position: RelativeRect.fromRect(
+          tapPos & const Size(40, 40), // smaller rect, the touch area
+          Offset.zero & overlay.size   // bigger rect, the entire screen
+        )
+      );
+    },
+    child: widget
+  );
 }
 
 final dateFmt = DateFormat("yyyy-MM-dd");

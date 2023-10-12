@@ -33,7 +33,10 @@ class ReadItem extends StatelessWidget {
     () => updateRead(context, item, (b) => b..started = dateFmt.format(DateTime.now())),
     () => updateRead(context, item, (b) => b..completed = dateFmt.format(DateTime.now())),
     () => updateRead(context, item, (b) => b..completed = null),
-    (_) => EditReadItem(item: item));
+    (_) => EditReadItem(item: item), longPressMenuItems: {
+      "Amazon": () => launchQuery('www.amazon.com', 's', {'k': item.searchTerms}),
+      "Google": () => googleSearch(item.searchTerms),
+    });
 }
 
 IconData iconFor (ReadType type) {

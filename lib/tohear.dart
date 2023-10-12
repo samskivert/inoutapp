@@ -33,7 +33,11 @@ class HearItem extends StatelessWidget {
     () => updateHear(context, item, (b) => b..started = dateFmt.format(DateTime.now())),
     () => updateHear(context, item, (b) => b..completed = dateFmt.format(DateTime.now())),
     () => updateHear(context, item, (b) => b..completed = null),
-    (_) => EditHearItem(item: item));
+    (_) => EditHearItem(item: item), longPressMenuItems: {
+      "Apple Music": () => launchQuery('music.apple.com', 'us/search', {'term': item.searchTerms}),
+      "Metacritic": () => launchQuery('www.metacritic.com', 'search/${item.searchTerms}', null),
+      "Google": () => googleSearch(item.searchTerms),
+    });
 }
 
 IconData iconFor (HearType type) {

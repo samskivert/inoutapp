@@ -74,6 +74,8 @@ abstract class Read implements Item, Consume, Built<Read, ReadBuilder> {
   ReadType get type;
   bool get abandoned;
 
+  String get searchTerms => author == null ? title : '$title, $author';
+
   @override bool isProtracted () => true;
   @override bool startable () => started == null;
   @override bool filter (Filter filter) =>
@@ -101,6 +103,8 @@ abstract class Watch implements Item, Consume, Built<Watch, WatchBuilder> {
   WatchType get type;
   bool get abandoned;
 
+  String get searchTerms => director == null ? title : '$title, $director';
+
   @override bool isProtracted () => type == WatchType.show || type == WatchType.video;
   @override bool startable () => started == null && isProtracted();
   @override bool filter (Filter filter) =>
@@ -127,6 +131,8 @@ abstract class Hear implements Item, Consume, Built<Hear, HearBuilder> {
   String? get artist;
   HearType get type;
 
+  String get searchTerms => artist == null ? title : '$title, $artist';
+
   @override bool isProtracted () => type == HearType.podcast;
   @override bool startable () => started == null && isProtracted();
   @override bool filter (Filter filter) =>
@@ -142,6 +148,8 @@ abstract class Play implements Item, Consume, Built<Play, PlayBuilder> {
   String get title;
   String get platform;
   bool get credits;
+
+  String get searchTerms => '$title, $platform';
 
   @override bool isProtracted () => true;
   @override bool startable () => started == null;

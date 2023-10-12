@@ -55,7 +55,10 @@ class PlayItem extends StatelessWidget {
     () => updatePlay(context, item, (b) => b..started = dateFmt.format(DateTime.now())),
     () => updatePlay(context, item, (b) => b..completed = dateFmt.format(DateTime.now())),
     () => updatePlay(context, item, (b) => b..completed = null),
-    (_) => EditPlayItem(item: item));
+    (_) => EditPlayItem(item: item), longPressMenuItems: {
+      "Metacritic": () => launchQuery('www.metacritic.com', 'search/${item.searchTerms}', null),
+      "Google": () => googleSearch(item.searchTerms),
+    });
 }
 
 class EditPlayItem extends EditItem<Play> {

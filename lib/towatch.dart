@@ -33,7 +33,11 @@ class WatchItem extends StatelessWidget {
     () => updateWatch(context, item, (b) => b..started = dateFmt.format(DateTime.now())),
     () => updateWatch(context, item, (b) => b..completed = dateFmt.format(DateTime.now())),
     () => updateWatch(context, item, (b) => b..completed = null),
-    (_) => EditWatchItem(item: item));
+    (_) => EditWatchItem(item: item), longPressMenuItems: {
+      "Metacritic": () => launchQuery('www.metacritic.com', 'search/${item.searchTerms}', null),
+      "IMDB": () => launchQuery('www.imdb.com', 'find', {'q': item.searchTerms}),
+      "Google": () => googleSearch(item.searchTerms),
+    });
 }
 
 IconData iconFor (WatchType type) {
