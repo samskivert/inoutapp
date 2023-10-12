@@ -21,7 +21,8 @@ flutter install --release
 
 ## Using
 
-If you just want to use the app, you can use the instance I operate at:
+Right now I haven't published this app to any app stores. So you have to build and install it to
+your own device. It will then connect to the same backend used by the webapp, which is here:
 
 [https://inputoutput.app/](https://inputoutput.app/)
 
