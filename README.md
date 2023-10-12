@@ -29,3 +29,5 @@ If you just want to use the app, you can use the instance I operate at:
 
 The I/O code is released under the New BSD License. See the [LICENSE](blob/master/LICENSE) file for
 details. The most recent version of the code is available at http://github.com/samskivert/inoutapp
+
+[Flutter]: https://flutter.dev/
