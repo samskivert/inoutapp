@@ -1,8 +1,8 @@
 # Input/Output
 
-A simple mobile-friendly webapp for tracking of things you want to put into your head: books to
-read, games to play, movies to watch, etc. The web version also supports a daily journal, which is
-not yet implemented in this mobile version. TODO!
+A simple mobile app for tracking of things you want to put into your head: books to read, games to
+play, movies to watch, etc. The web version also supports a daily journal, which is not yet
+implemented in this mobile version. TODO!
 
 ## Building
 
