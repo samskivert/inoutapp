@@ -229,13 +229,13 @@ Widget itemRow (
   final aux = subtitle != null && recommender != null ? '$subtitle (via $recommender)' :
     recommender != null ? 'via $recommender' : subtitle ?? '';
   final auxStyle = Theme.of(ctx).textTheme.bodySmall?.merge(TextStyle(color: Colors.grey[600]));
-  Widget main = Text(title, softWrap: true);
-  if (longPressMenuItems != null) main = makeLongPress(ctx, main, longPressMenuItems);
+  Widget info = Column(
+    crossAxisAlignment: CrossAxisAlignment.stretch,
+    children: <Widget>[Text(title, softWrap: true), Text(aux, style: auxStyle)]);
+  if (longPressMenuItems != null) info = makeLongPress(ctx, info, longPressMenuItems);
   return Row(children: <Widget>[
     IconButton(icon: Icon(actionIcon), tooltip: actionTip, onPressed: action),
-    Expanded(child: Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: <Widget>[main, Text(aux, style: auxStyle)])),
+    Expanded(child: info),
     const SizedBox(width: 5),
     if (item.link != null) IconButton(
       icon: const Icon(Icons.link),
