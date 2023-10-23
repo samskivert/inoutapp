@@ -58,7 +58,7 @@ class EditReadItemState extends EditItemState<EditReadItem, Read, ReadType> {
   @override bool hasAux () => true;
   @override String auxName () => 'Author';
   @override String? aux (Read item) => item.author;
-  @override Read setAux (Read item, String? aux) => item.rebuild((b) => b..title = aux);
+  @override Read setAux (Read item, String? aux) => item.rebuild((b) => b..author = aux);
   @override List<DropdownMenuEntry<ReadType>> typeEntries () => ReadType.values.map(
     (rr) => DropdownMenuEntry<ReadType>(value: rr, label: rr.label)).toList();
   @override bool hasType () => true;

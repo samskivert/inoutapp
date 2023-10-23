@@ -60,7 +60,7 @@ class EditHearItemState extends EditItemState<EditHearItem, Hear, HearType> {
   @override bool hasAux () => true;
   @override String auxName () => 'Artist';
   @override String? aux (Hear item) => item.artist;
-  @override Hear setAux (Hear item, String? aux) => item.rebuild((b) => b..title = aux);
+  @override Hear setAux (Hear item, String? aux) => item.rebuild((b) => b..artist = aux);
   @override List<DropdownMenuEntry<HearType>> typeEntries () => HearType.values.map(
     (rr) => DropdownMenuEntry<HearType>(value: rr, label: rr.label)).toList();
   @override bool hasType () => true;

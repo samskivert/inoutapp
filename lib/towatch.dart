@@ -60,7 +60,7 @@ class EditWatchItemState extends EditItemState<EditWatchItem, Watch, WatchType> 
   @override bool hasAux () => true;
   @override String auxName () => 'Director';
   @override String? aux (Watch item) => item.director;
-  @override Watch setAux (Watch item, String? aux) => item.rebuild((b) => b..title = aux);
+  @override Watch setAux (Watch item, String? aux) => item.rebuild((b) => b..director = aux);
   @override List<DropdownMenuEntry<WatchType>> typeEntries () => WatchType.values.map(
     (rr) => DropdownMenuEntry<WatchType>(value: rr, label: rr.label)).toList();
   @override bool hasType () => true;
