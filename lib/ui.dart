@@ -133,7 +133,11 @@ abstract class ItemPageState<W extends StatefulWidget, I extends Item> extends S
           padding: const EdgeInsets.symmetric(horizontal: 12),
           child: itemList<I>(items, itemType(), mkItem)
         )),
-        bottomNavigationBar: BottomAppBar(height: 60, child: footer),
+        bottomNavigationBar: Padding(
+          // add the view insets so the bottom bar stays above the floating keyboard
+          padding: MediaQuery.of(context).viewInsets,
+          child: BottomAppBar(height: 60, child: footer),
+        ),
       )
     );
   }
