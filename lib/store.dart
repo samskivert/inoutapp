@@ -20,7 +20,11 @@ class Store {
     switch (type) {
     case ItemType.read: createRead(main, aux);
     case ItemType.watch: createWatch(main, aux);
-    default: break; // TODO
+    case ItemType.hear: createHear(main, aux);
+    case ItemType.play: createPlay(main, aux);
+    case ItemType.dine: createDine(main, aux);
+    case ItemType.build: createBuild(main);
+    default: throw Exception('Unhandled creation type: $type');
     }
     return main;
   }
@@ -103,7 +107,7 @@ class Store {
 
   Future<void> createPlay (String title, String? platform) => recreatePlay(Play(
     (b) => b..title = title
-            ..platform = platform ?? 'pc'
+            ..platform = (platform ?? 'pc').toLowerCase()
             ..created = Timestamp.now()));
   Future<void> recreatePlay (Play item) => _recreate('play', Play.serializer, item);
   Future<void> updatePlay (Play orig, Play updated) =>
